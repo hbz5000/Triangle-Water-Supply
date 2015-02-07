@@ -270,8 +270,8 @@ int main (int argc, char *argv[])
 		// cout << "running simulations" << endl;
 		
 		// Read a certain number of parameter sets from a file
-		int numSolutions = 100;		
-		readFile(simulation.parameterInput, "./inputfiles/parameterInputFile.csv", numSolutions, c_num_dec);
+		int numSolutions = 1;		
+		readFile(simulation.parameterInput, "./inputfiles/parameterInputFile_O0_F1.csv", numSolutions, c_num_dec);
 		
 		// Set up the output stream for objective values
 		ofstream out1;

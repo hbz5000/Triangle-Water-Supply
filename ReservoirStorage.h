@@ -13,8 +13,8 @@ public:
 										double jordanLakeSupplyCap, double jordanLakeQualityCap, double CaryTreatmentCap, double DurhamCaryCap, double DurhamOWASACap, 
 										double RaleighCaryCap, double raleighAllocation, double durhamAllocation, double owasaAllocation, double caryAllocation);
 	void initializeReservoirStorageROF(double durhamCap, double CCRCap, double StQCap, double ULCap, double lakeWBCap, double fallsLakeSupplyCap, double fallsLakeQualityCap,
-		double durhamStor, double CCRStor, double StQStor, double ULStor, double lakeWBStor, double fallsLakeSupplyStor, double fallsLakeQualityStor, double CaryTreatmentCap, 
-		double DurhamCaryCap, double DurhamOWASACap, double RaleighCaryCap);
+		double jordanLakeSupplyCap, double jordanLakeQualityCap, double caryJordanAlloc, double raleighJordanAlloc, double durhamJordanAlloc, double owasaJordanAlloc, double CaryTreatmentCap, double DurhamCaryCap, double DurhamOWASACap, double RaleighCaryCap);
+	void updateReservoirStorageROF(double storageVolume, double storageIncrements);
 	void setDemands(double durham, double owasa, double cary, double raleigh, int numberOfDaysInWeek);
 	void setSpillover(int week);
 	void calcTransfers(double transferDurham, double durhamR, double transferOWASA, double owasaR, double transferRaleigh, double raleighR, double owasaWD);		

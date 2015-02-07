@@ -51,42 +51,68 @@ void ReservoirStorage::initializeReservoirStorage(double durhamCap, double CCRCa
 	durhamJordanStorage = durhamJordanCapacity;
 	owasaJordanCapacity = owasaJordanAlloc*jordanLakeSupplyCapacity;
 	owasaJordanStorage = owasaJordanCapacity;
-	jordanQualityFraction = 94600/(45800+94600);
-	jordanRaleighFraction = raleighAllocation*45800/(94600+45800);
-	jordanDurhamFraction = durhamAllocation*45800/(94600+45800);
-	jordanCaryFraction = caryAllocation*45800/(94600+45800);
-	jordanOWASAFraction = owasaAllocation*45800/(94600+45800);
+	jordanQualityFraction = 94600.0/(45800.0+94600.0);
+	jordanRaleighFraction = raleighAllocation*45800.0/(94600.0+45800.0);
+	jordanDurhamFraction = durhamAllocation*45800.0/(94600.0+45800.0);
+	jordanCaryFraction = caryAllocation*45800.0/(94600.0+45800.0);
+	jordanOWASAFraction = owasaAllocation*45800.0/(94600.0+45800.0);	
 	return;
 }
-
-void ReservoirStorage::initializeReservoirStorageROF(double durhamCap, double CCRCap, double StQCap, double ULCap, double lakeWBCap, double fallsLakeSupplyCap, double fallsLakeQualityCap, 
-	double durhamStor, double CCRStor, double StQStor, double ULStor, double lakeWBStor, double fallsLakeSupplyStor, double fallsLakeQualityStor, double CaryTreatmentCap, double DurhamCaryCap, 
-	double DurhamOWASACap, double RaleighCaryCap)
+void ReservoirStorage::initializeReservoirStorageROF(double durhamCap, double CCRCap, double StQCap, double ULCap, double lakeWBCap, double fallsLakeSupplyCap, double fallsLakeQualityCap, double jordanLakeSupplyCap, double jordanLakeQualityCap, double caryJordanAlloc, double raleighJordanAlloc, double durhamJordanAlloc, double owasaJordanAlloc, double CaryTreatmentCap, double DurhamCaryCap, double DurhamOWASACap, double RaleighCaryCap)
 {
 	//Same as above, allowing for variable initial reservoir storage
 	durhamCapacity=durhamCap;
-	durhamStorage=durhamStor;
 	CCRCapacity = CCRCap;
-	CCRStorage = CCRStor;
 	ULCapacity = ULCap;
-	ULStorage = ULStor;
 	StQCapacity = StQCap;
-	StQStorage = StQStor;
 	OWASACapacity = CCRCap+StQCap+ULCap;
-	OWASAStorage = CCRStorage+ULStorage+StQStorage;
 	lakeWBCapacity = lakeWBCap;
 	fallsLakeSupplyCapacity = fallsLakeSupplyCap;
 	fallsLakeQualityCapacity = fallsLakeQualityCap;
-	lakeWBStorage = lakeWBStor;
-	fallsLakeSupplyStorage = fallsLakeSupplyStor;
-	fallsLakeQualityStorage = fallsLakeQualityStor;
-	CaryTreatmentCapacity = CaryTreatmentCap;
-	DurhamCaryCapacity = DurhamCaryCap;
-	DurhamOWASACapacity = DurhamOWASACap;
-	RaleighCaryCapacity = RaleighCaryCap;
-	durhamRequest = 0;
-	owasaRequest = 0;
-	raleighRequest = 0;
+	jordanLakeSupplyCapacity = jordanLakeSupplyCap;
+	jordanLakeQualityCapacity = jordanLakeQualityCap;
+	CaryTreatmentCapacity = CaryTreatmentCap;//Cary WTP capacity
+	DurhamCaryCapacity = DurhamCaryCap;//Capacity of the Durham Cary interconnection
+	DurhamOWASACapacity = DurhamOWASACap;//Capacity of the Durham OWASA interconnection
+	RaleighCaryCapacity = RaleighCaryCap;//Capacity of the Raleigh Cary interconnection
+	raleighAllocation = raleighJordanAlloc;
+	caryAllocation = caryJordanAlloc;
+	durhamAllocation = durhamJordanAlloc;
+	owasaAllocation = owasaJordanAlloc;
+	caryJordanCapacity = caryJordanAlloc*jordanLakeSupplyCapacity;
+	raleighJordanCapacity = raleighJordanAlloc*jordanLakeSupplyCapacity;
+	durhamJordanCapacity = durhamJordanAlloc*jordanLakeSupplyCapacity;
+	owasaJordanCapacity = owasaJordanAlloc*jordanLakeSupplyCapacity;
+	jordanQualityFraction = 94600.0/(45800.0+94600.0);
+	jordanRaleighFraction = raleighAllocation*45800.0/(94600.0+45800.0);
+	jordanDurhamFraction = durhamAllocation*45800.0/(94600.0+45800.0);
+	jordanCaryFraction = caryAllocation*45800.0/(94600.0+45800.0);
+	jordanOWASAFraction = owasaAllocation*45800.0/(94600.0+45800.0);
+
+	return;
+}
+
+void ReservoirStorage::updateReservoirStorageROF(double storageVolume, double storageIncrements)
+{
+	//Same as above, allowing for variable initial reservoir storage
+	double initialStorage = (storageVolume/storageIncrements);
+	durhamStorage=durhamCapacity*initialStorage;
+	CCRStorage = CCRCapacity*initialStorage;
+	ULStorage = ULCapacity*initialStorage;
+	StQStorage = StQCapacity*initialStorage;
+	OWASAStorage = OWASACapacity*initialStorage;
+	lakeWBStorage = lakeWBCapacity*initialStorage;
+	fallsLakeSupplyStorage = fallsLakeSupplyCapacity*initialStorage;
+	fallsLakeQualityStorage = fallsLakeQualityCapacity*initialStorage;
+	jordanLakeSupplyStorage = jordanLakeSupplyCapacity*initialStorage;
+	jordanLakeQualityStorage = jordanLakeQualityCapacity*initialStorage;
+	durhamRequest = 0;//Durham intial transfer request
+	owasaRequest = 0;//OWASA initial transfer request
+	raleighRequest = 0;//Raleigh initial transfer request
+	caryJordanStorage = caryJordanCapacity*initialStorage;
+	raleighJordanStorage = raleighJordanCapacity*initialStorage;
+	durhamJordanStorage = durhamJordanCapacity*initialStorage;
+	owasaJordanStorage = owasaJordanCapacity*initialStorage;
 	return;
 }
 void ReservoirStorage::openResFiles()

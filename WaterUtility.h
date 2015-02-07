@@ -18,7 +18,7 @@ class WaterUtility
 	data_t FutureDemand;
 	data_t FutureBreakdown;
 	data_t usePatterns, useFractions, useFractions_Restrictions;
-	data_t riskOfFailure;
+	double **riskOfFailure;
 	double *inflows1DIrr , *inflows1DNon, *demand1DIrr, *demand1DNon;
 	double **inflows2DIrr, **inflows2DNon, **demand2DIrr, **demand2DNon;
 	double **actualPDF;
@@ -89,6 +89,7 @@ class WaterUtility
 	int week_of_last_restrictions;
 	double insurancePremium;
 	bool shouldAllocate;
+	double infRisk;
 	
 	//~~~~~~~~~~~~~~~~ Public functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	void calcWaterPrice(double elasticity_Of_Demand[]);

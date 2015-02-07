@@ -26,7 +26,8 @@ public:
 	
 	void generateStreamflows();
 	void correlateDemandVariations(double demand_variation_multiplier);
-	void createRiskOfFailure();
+	void createRiskOfFailure(int real, int synthY, double durhAnnDemand, double owasaAnnDemand, double ralAnnDemand, double carAnnDemand);
+	void createInfrastructureRisk(int real, int synthY, double durhAnnDemand, double owasaAnnDemand, double ralAnnDemand, double carAnnDemand);
 	data_t parameterInput;
 	
 	WaterUtility durham, owasa, cary, raleigh;
@@ -41,7 +42,9 @@ private:
 	
 	//class definitions
 	Dates simDates;
+	Dates riskOfFailureDates;
 	ReservoirStorage systemStorage;
+	ReservoirStorage riskOfFailureStorage;
 
 	//for calc water price
 	double sewerFractions[12];

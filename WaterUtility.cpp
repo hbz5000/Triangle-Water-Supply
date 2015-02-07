@@ -37,6 +37,7 @@ WaterUtility::~WaterUtility()
 	zap(inflows2DIrr, 78); zap(inflows2DNon, 78);
 	zap(demand2DIrr, 18); zap(demand2DNon, 18);
 	zap(actualPDF, 16);
+	zap(riskOfFailure, 20);
 }
 
 void WaterUtility::configure(int nmonths, int nyears, int ntypes, int ntiers, int nstages, int nfutureyears, double failure, int nannualdecisionperiods, int termyear, 
@@ -91,6 +92,8 @@ void WaterUtility::configure(int nmonths, int nyears, int ntypes, int ntiers, in
 	
 	general_2d_allocate(demandVariation, numRealizations, 52*terminateYear, 0.0);
 	general_2d_allocate(actualPDF, 16, 17, 0.0);
+	
+	general_2d_allocate(riskOfFailure, 20, 52, 0.0);
 	
 	if(formulation == 0)
 		usesROF = false;
@@ -301,7 +304,7 @@ void WaterUtility::calculateRestrictions(int year, int week, int numdays, int mo
 
 void WaterUtility::calcTransferTriggers(int volumeIncrements, int terminateYear)
 {	
-	int transferLevel = volumeIncrements-1, timeIndex = 0;
+	int transferLevel = volumeIncrements-1;
 	double ROF = 0;	
 	
 	//Calculating risk-of-failure for transfers - need to find the storage level corresponding with the 'acceptable' risk-of-failure.  Once that storage level is calculated,
@@ -317,13 +320,12 @@ void WaterUtility::calcTransferTriggers(int volumeIncrements, int terminateYear)
 			
 			else
 			{	
-				timeIndex = week + year*52;
 				transferLevel = volumeIncrements - 1;
 				ROF = 0;
 				
 				while(ROF < TTriggerI && transferLevel > -1)//Runs through the discritizations of reservoir storage to find the first 'bin' in the given week that has
 				{													//a risk-of-failure larger than the transfer trigger
-					ROF = riskOfFailure[transferLevel][timeIndex];
+					ROF = riskOfFailure[transferLevel][week];
 					transferLevel--;
 				}
 
