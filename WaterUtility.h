@@ -90,6 +90,7 @@ class WaterUtility
 	double insurancePremium;
 	bool shouldAllocate;
 	double infRisk;
+	double westernWakeTreatmentFrac;
 	
 	//~~~~~~~~~~~~~~~~ Public functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	void calcWaterPrice(double elasticity_Of_Demand[]);

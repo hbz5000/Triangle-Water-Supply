@@ -31,7 +31,7 @@ public:
 	data_t parameterInput;
 	
 	WaterUtility durham, owasa, cary, raleigh;
-	TimeSeriesData durhamInflows, owasaInflows, fallsInflows, wheelerInflows, crabtreeInflows, claytonInflows, jordanInflows, lillingtonInflows;
+	TimeSeriesData durhamInflows, owasaInflows, fallsInflows, wheelerInflows, crabtreeInflows, claytonInflows, jordanInflows, lillingtonInflows, littleRiverRaleighInflows;
 	TimeSeriesData durhamOwasaEvap, fallsEvap, wheelerEvap;
 	
 	int formulation;
@@ -61,7 +61,7 @@ private:
 	data_t fallsLakeInflow, lakeWBInflow;
 	data_t fallsLakeEvaporation, lakeWheelerEvaporation;
 	data_t claytonInflow, crabtreeInflow;
-	data_t jordanLakeInflow, lillingtonGaugeInflow;
+	data_t jordanLakeInflow, lillingtonGaugeInflow, littleRiverRaleighInflow;
 	
 	data_t caryFutureD, raleighFutureD, durhamFutureD, owasaFutureD;
 	data_t caryFutureB, raleighFutureB, durhamFutureB, owasaFutureB;

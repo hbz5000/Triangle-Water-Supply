@@ -224,6 +224,7 @@ void Simulation::importDataFiles()
 	// 81 Years: 1930 - 2010
 	// 82 Years: 1926 - 2007
 	// 83 Years: 1928 - 2010
+	// 83 Years: 1929 - 2011 (little river raleigh)
 	readFile(michieInflow, directoryName + "updatedMichieInflow.csv", 52, 82);
 	readFile(littleRiverInflow, directoryName + "updatedLittleRiverInflow.csv", 52, 82);
 	readFile(owasaInflow, directoryName + "updatedOWASAInflow.csv", 52, 82);
@@ -233,6 +234,7 @@ void Simulation::importDataFiles()
 	readFile(crabtreeInflow, directoryName + "crabtreeCreekInflow.csv", 83, 52);
 	readFile(jordanLakeInflow, directoryName + "updatedJordanLakeInflow.csv", 81, 52);
 	readFile(lillingtonGaugeInflow, directoryName + "updatedLillingtonInflow.csv", 81, 52);
+	readFile(littleRiverRaleighInflow, directoryName + "updatedLittleRiverRaleighInflow.csv", 83, 52);
 	
 	// Evaporation data (MG/acre)
 	// 82 years (1926 - 2007)
@@ -260,6 +262,8 @@ void Simulation::importDataFiles()
 	readFile(jordanInflows.stoch2, directoryName + "updatedJordanStoch2.csv", 52, 52);
 	readFile(lillingtonInflows.stoch1, directoryName + "updatedLillingtonStoch1.csv", 52, 52);
 	readFile(lillingtonInflows.stoch2, directoryName + "updatedLillingtonStoch2.csv", 52, 52);
+	readFile(littleRiverRaleighInflows.stoch1, directoryName + "updatedLittleRiverRaleighStoch1.csv", 52, 52);
+	readFile(littleRiverRaleighInflows.stoch2, directoryName + "updatedLittleRiverRaleighStoch2.csv", 52, 52);
 	
 	// U file from Cholesky Factorization - combine with standardized evaporation
 	// to make stochastic inflows for weeks 1 - 26 (2) and weeks 27 - 52 (1)
@@ -501,6 +505,7 @@ void Simulation::preconditionData(double unit_demand_multiplier, double future_d
 		claytonInflows.allocate(inflowR, inflowC, terminateYear*52, numRealizations);
 		jordanInflows.allocate(inflowR, inflowC, terminateYear*52, numRealizations);
 		lillingtonInflows.allocate(inflowR, inflowC, terminateYear*52, numRealizations);
+		littleRiverRaleighInflows.allocate(inflowR, inflowC, terminateYear*52, numRealizations);
 
 		//Fill out raw data, allowing for use of historic record of variable length
 		startYear = 0;
@@ -516,6 +521,7 @@ void Simulation::preconditionData(double unit_demand_multiplier, double future_d
 				crabtreeInflows.rawData[row][col]	= log(crabtreeInflow[row+1+startYear][col]);
 				jordanInflows.rawData[row][col]		= log(jordanLakeInflow[row+startYear][col]);
 				lillingtonInflows.rawData[row][col]	= log(lillingtonGaugeInflow[row+startYear][col]);
+				littleRiverRaleighInflows.rawData[row][col] = log(littleRiverRaleighInflow[row+1+startYear][col]);
 			}
 		}
 		int streamflowStartYear = inflowR - UDr; 
@@ -527,6 +533,7 @@ void Simulation::preconditionData(double unit_demand_multiplier, double future_d
 		crabtreeInflows.calculateNormalizations(inflowR, inflowC, streamflowStartYear);
 		jordanInflows.calculateNormalizations(inflowR, inflowC, streamflowStartYear);
 		lillingtonInflows.calculateNormalizations(inflowR, inflowC, streamflowStartYear);
+		littleRiverRaleighInflows.calculateNormalizations(inflowR, inflowC, streamflowStartYear);
 	}
 	
 	// Creating joint probability density functions between the whitened demand and inflow data for each utility
@@ -663,6 +670,7 @@ void Simulation::generateStreamflows()
 	crabtreeInflows.generateSynthetic(randomInflowNumber, terminateYear, numRealizations, true);
 	jordanInflows.generateSynthetic(randomInflowNumber, terminateYear, numRealizations, true);
 	lillingtonInflows.generateSynthetic(randomInflowNumber, terminateYear, numRealizations, true);
+	littleRiverRaleighInflows.generateSynthetic(randomInflowNumber, terminateYear, numRealizations, true);
 	
 	durhamOwasaEvap.generateSynthetic(randomInflowNumber, terminateYear, numRealizations, false);
 	fallsEvap.generateSynthetic(randomInflowNumber, terminateYear, numRealizations, false);
@@ -1237,31 +1245,32 @@ void Simulation::createRiskOfFailure(int realization, int synthYear, double durh
 	// distinct storage/week point, a percentage is calculating, showing the probability that reservoir levels will drop below 20% of total storage capacity
 	// at least once over the next 52 weeks.  Demand is updated for every year with demand growth estimates, such that a distinct risk-of-failure is calculated
 	// in each future year.  52(weeks per year) X 20 (storage discritizations) X 51 (max number of future years) distinct risk values are calculated.
-	double durhamROFDemand = 0;
-	double owasaROFDemand = 0;
-	double raleighROFDemand = 0;
-	double caryROFDemand = 0;
-	double durhamROFInflow = 0;
-	double raleighROFInflow = 0;
-	double owasaROFInflow = 0;
-	double wbROFInflow = 0;
-	double claytonROFInflow = 0;
-	double crabtreeROFInflow = 0;
-	double jordanROFInflow = 0;
-	double lillingtonROFInflow = 0;
-	double ROFevap = 0;
-	double fallsROFevap = 0;
-	double wbROFevap = 0;
-	double oROFs = 0;
-	double dROFs = 0;
-	double rROFs = 0;
-	double cROFs = 0;
+	double durhamROFDemand = 0.0;
+	double owasaROFDemand = 0.0;
+	double raleighROFDemand = 0.0;
+	double caryROFDemand = 0.0;
+	double durhamROFInflow = 0.0;
+	double raleighROFInflow = 0.0;
+	double owasaROFInflow = 0.0;
+	double wbROFInflow = 0.0;
+	double claytonROFInflow = 0.0;
+	double crabtreeROFInflow = 0.0;
+	double jordanROFInflow = 0.0;
+	double lillingtonROFInflow = 0.0;
+	double littleRiverRaleighROFInflow = 0.0;
+	double ROFevap = 0.0;
+	double fallsROFevap = 0.0;
+	double wbROFevap = 0.0;
+	double oROFs = 0.0;
+	double dROFs = 0.0;
+	double rROFs = 0.0;
+	double cROFs = 0.0;
 	int counter = 0;
 	int syntheticIndex = 0;
-	double thisTimeO =0;
-	double thisTimeR = 0;
-	double thisTimeD = 0;
-	double thisTimeC = 0;
+	double thisTimeO =0.0;
+	double thisTimeR = 0.0;
+	double thisTimeD = 0.0;
+	double thisTimeC = 0.0;
 	int histYear = 77;
 	int yearROF;
 	int monthROF;
@@ -1314,6 +1323,7 @@ void Simulation::createRiskOfFailure(int realization, int synthYear, double durh
 					crabtreeROFInflow = crabtreeInflow[histRealizations+yearROF-2][weekROF-1];// Crabtree creek
 					jordanROFInflow = jordanLakeInflow[histRealizations+yearROF-4][weekROF-1];
 					lillingtonROFInflow = lillingtonGaugeInflow[histRealizations+yearROF-4][weekROF-1];
+					littleRiverRaleighROFInflow = littleRiverRaleighInflow[histRealizations+yearROF-3][weekROF-1];
 					//Evap Calcs
 					ROFevap = evaporation[weekROF-1][histRealizations+yearROF-4];//Durham and OWASA evap
 					fallsROFevap = fallsLakeEvaporation[histRealizations+yearROF-3][weekROF-1];// Falls Lake evap
@@ -1331,7 +1341,7 @@ void Simulation::createRiskOfFailure(int realization, int synthYear, double durh
 						durhamROFDemand*returnRatio[0][weekROF-1], durhamROFDemand*returnRatio[0][weekROF-1],owasaROFDemand*returnRatio[0][weekROF-1],
 						fallsROFevap, 
 						wbROFevap, 
-						ROFevap);
+						ROFevap, littleRiverRaleighROFInflow);
 					riskOfFailureStorage.setSpillover(weekROF-1);//reservoir releases to meet downstream needs and/or reservoir capacity
 					riskOfFailureStorage.updateStorage(weekROF-1);//storage calcs
 					
@@ -1414,6 +1424,7 @@ void Simulation::createRiskOfFailure(int realization, int synthYear, double durh
 					crabtreeROFInflow = crabtreeInflows.synthetic[realization][syntheticIndex];// Crabtree creek
 					jordanROFInflow = jordanInflows.synthetic[realization][syntheticIndex];
 					lillingtonROFInflow = lillingtonInflows.synthetic[realization][syntheticIndex];
+					littleRiverRaleighROFInflow = littleRiverRaleighInflows.synthetic[realization][syntheticIndex];
 					//Evap Calcs
 					ROFevap = evaporation[weekROF-1][synthRealizations];//Durham and OWASA evap
 					fallsROFevap = fallsLakeEvaporation[synthRealizations][weekROF-1];// Falls Lake evap
@@ -1431,7 +1442,7 @@ void Simulation::createRiskOfFailure(int realization, int synthYear, double durh
 						durhamROFDemand*returnRatio[0][weekROF-1], durhamROFDemand*returnRatio[0][weekROF-1],owasaROFDemand*returnRatio[0][weekROF-1],
 						fallsROFevap, 
 						wbROFevap, 
-						ROFevap);
+						ROFevap, littleRiverRaleighROFInflow);
 					riskOfFailureStorage.setSpillover(week-1);//reservoir releases to meet downstream needs and/or reservoir capacity
 					riskOfFailureStorage.updateStorage(week-1);//storage calcs
 					
@@ -1494,31 +1505,32 @@ void Simulation::createInfrastructureRisk(int realization, int synthYear, double
 	// distinct storage/week point, a percentage is calculating, showing the probability that reservoir levels will drop below 20% of total storage capacity
 	// at least once over the next 52 weeks.  Demand is updated for every year with demand growth estimates, such that a distinct risk-of-failure is calculated
 	// in each future year.  52(weeks per year) X 20 (storage discritizations) X 51 (max number of future years) distinct risk values are calculated.
-	double durhamROFDemand = 0;
-	double owasaROFDemand = 0;
-	double raleighROFDemand = 0;
-	double caryROFDemand = 0;
-	double durhamROFInflow = 0;
-	double raleighROFInflow = 0;
-	double owasaROFInflow = 0;
-	double wbROFInflow = 0;
-	double claytonROFInflow = 0;
-	double crabtreeROFInflow = 0;
-	double jordanROFInflow = 0;
-	double lillingtonROFInflow = 0;
-	double ROFevap = 0;
-	double fallsROFevap = 0;
-	double wbROFevap = 0;
-	double oROFs = 0;
-	double dROFs = 0;
-	double rROFs = 0;
-	double cROFs = 0;
+	double durhamROFDemand = 0.0;
+	double owasaROFDemand = 0.0;
+	double raleighROFDemand = 0.0;
+	double caryROFDemand = 0.0;
+	double durhamROFInflow = 0.0;
+	double raleighROFInflow = 0.0;
+	double owasaROFInflow = 0.0;
+	double wbROFInflow = 0.0;
+	double claytonROFInflow = 0.0;
+	double crabtreeROFInflow = 0.0;
+	double jordanROFInflow = 0.0;
+	double lillingtonROFInflow = 0.0;
+	double littleRiverRaleighROFInflow = 0.0;
+	double ROFevap = 0.0;
+	double fallsROFevap = 0.0;
+	double wbROFevap = 0.0;
+	double oROFs = 0.0;
+	double dROFs = 0.0;
+	double rROFs = 0.0;
+	double cROFs = 0.0;
 	int counter = 0;
 	int syntheticIndex = 0;
-	double thisTimeO =0;
-	double thisTimeR = 0;
-	double thisTimeD = 0;
-	double thisTimeC = 0;
+	double thisTimeO = 0.0;
+	double thisTimeR = 0.0;
+	double thisTimeD = 0.0;
+	double thisTimeC = 0.0;
 	int histYear = 77;
 	durham.infRisk = 0.0;
 	raleigh.infRisk = 0.0;
@@ -1564,6 +1576,7 @@ void Simulation::createInfrastructureRisk(int realization, int synthYear, double
 			crabtreeROFInflow = crabtreeInflow[histRealizations+yearROF-2][weekROF-1];// Crabtree creek
 			jordanROFInflow = jordanLakeInflow[histRealizations+yearROF-4][weekROF-1];
 			lillingtonROFInflow = lillingtonGaugeInflow[histRealizations+yearROF-4][weekROF-1];
+			littleRiverRaleighROFInflow = littleRiverRaleighInflow[histRealizations+yearROF-3][weekROF-1];
 			//Evap Calcs
 			ROFevap = evaporation[week-1][histRealizations+yearROF-4];//Durham and OWASA evap
 			fallsROFevap = fallsLakeEvaporation[histRealizations+yearROF-3][weekROF-1];// Falls Lake evap
@@ -1581,7 +1594,7 @@ void Simulation::createInfrastructureRisk(int realization, int synthYear, double
 				durhamROFDemand*returnRatio[0][weekROF-1], durhamROFDemand*returnRatio[0][weekROF-1],owasaROFDemand*returnRatio[0][weekROF-1],
 				fallsROFevap, 
 				wbROFevap, 
-				ROFevap);
+				ROFevap, littleRiverRaleighROFInflow);
 			riskOfFailureStorage.setSpillover(weekROF-1);//reservoir releases to meet downstream needs and/or reservoir capacity
 			riskOfFailureStorage.updateStorage(weekROF-1);//storage calcs
 					
@@ -1664,6 +1677,7 @@ void Simulation::createInfrastructureRisk(int realization, int synthYear, double
 			crabtreeROFInflow = crabtreeInflows.synthetic[realization][syntheticIndex];// Crabtree creek
 			jordanROFInflow = jordanInflows.synthetic[realization][syntheticIndex];
 			lillingtonROFInflow = lillingtonInflows.synthetic[realization][syntheticIndex];
+			littleRiverRaleighROFInflow = littleRiverRaleighInflows.synthetic[realization][syntheticIndex];
 			//Evap Calcs
 			ROFevap = evaporation[weekROF-1][synthRealizations];//Durham and OWASA evap
 			fallsROFevap = fallsLakeEvaporation[synthRealizations][weekROF-1];// Falls Lake evap
@@ -1681,7 +1695,7 @@ void Simulation::createInfrastructureRisk(int realization, int synthYear, double
 				durhamROFDemand*returnRatio[0][weekROF-1], durhamROFDemand*returnRatio[0][weekROF-1],owasaROFDemand*returnRatio[0][weekROF-1],
 				fallsROFevap, 
 				wbROFevap, 
-				ROFevap);
+				ROFevap, littleRiverRaleighROFInflow);
 			riskOfFailureStorage.setSpillover(weekROF-1);//reservoir releases to meet downstream needs and/or reservoir capacity
 			riskOfFailureStorage.updateStorage(weekROF-1);//storage calcs
 					
@@ -1740,12 +1754,17 @@ return;
 void Simulation::realizationLoop()
 {	
 	double durhamActualInflow, owasaActualInflow, fallsActualInflow, wbActualInflow, claytonActualInflow;
-	double crabtreeActualInflow, jordanActualInflow, lillingtonActualInflow, actualEvap, actualFallsEvap, actualWBEvap;
+	double crabtreeActualInflow, jordanActualInflow, lillingtonActualInflow,actualEvap, actualFallsEvap, actualWBEvap;
+	double littleRiverRaleighActualInflow;
 	int season = 1, syntheticIndex = 0; // week 1 is non-irrigation season (season = 1)
 	double raleighBaselineMultiplier = 40434.0*.32*(14700.0/34700.0);
 	zeroes(anyFailure, terminateYear);
 	anyRestrictionFreq = 0.0;
-	
+	double durham_res_supply_capacity = 6349.0;
+	double cane_creek_supply_capacity = 2909.0;
+	double stone_quarry_supply_capacity = 200.0;
+	double university_lake_supply_capacity = 449.0;
+	double lake_wheeler_benson_supply_capacity = 2789.66;
 	double falls_lake_supply_capacity = 14700.0;
 	double falls_lake_wq_capacity = (14700.0 - falls_lake_supply_capacity) + 20000.0;
 	double jordan_lake_supply_capacity = 14924.0;
@@ -1754,6 +1773,27 @@ void Simulation::realizationLoop()
 	double durham_cary_capacity = 10.0;
 	double durham_owasa_capacity = 7.0;
 	double raleigh_cary_capacity = 10.8;
+	double raleigh_durham_capacity = 10.0;
+	double teer_quarry_supply_capacity = 1315.0;
+	double teer_quarry_intake_capacity = 20.0;
+	double teer_quarry_outflow_capacity = 10.0;
+	double little_river_raleigh_supply_capacity = 0.0;
+	double western_wake_treatment_capacity = 40.0;
+	double durham_reclaimation_capacity = 0.0;
+	double raleigh_quarry_capacity = 0.0;
+	double raleigh_quarry_intake_capacity = 50.0;
+	double raleigh_quarry_outflow_capacity = 18.0;
+	double raleigh_intake_capacity = 10.0;
+	double cary_quarry_capacity = 0.0;
+	double cary_quarry_intake_capacity = 0.0;
+	double cary_quarry_outflow_capacity = 0.0;
+	owasa.westernWakeTreatmentFrac = 0.1;
+	durham.westernWakeTreatmentFrac = 0.5;
+	raleigh.westernWakeTreatmentFrac = 0.0;
+	owasa.jordanLakeAlloc = .1;
+	durham.jordanLakeAlloc = .2;
+	raleigh.jordanLakeAlloc = .2;
+	
 	
 	for (int realization = 0; realization < numRealizations; realization++)
 	{
@@ -1761,24 +1801,16 @@ void Simulation::realizationLoop()
 		// Initialize demand and reservoir storage objects (year, month, week, daysPerWeek, leapYearCounter)
 		simDates.initializeDates(4,1,1,7,0);
 		
-		systemStorage.initializeReservoirStorage(6349.0, 2909.0, 200.0, 449.0, 2789.66,
+		systemStorage.initializeReservoirStorage(durham_res_supply_capacity, 											cane_creek_supply_capacity,												stone_quarry_supply_capacity, 												university_lake_supply_capacity, 											lake_wheeler_benson_supply_capacity,
 													falls_lake_supply_capacity, falls_lake_wq_capacity,
 													jordan_lake_supply_capacity, jordan_lake_wq_capacity,
-													cary_treatment_capacity, durham_cary_capacity, durham_owasa_capacity, raleigh_cary_capacity,
-													raleigh.jordanLakeAlloc, durham.jordanLakeAlloc, owasa.jordanLakeAlloc, cary.jordanLakeAlloc); //infrastructure included in the model
-		riskOfFailureStorage.initializeReservoirStorageROF(6349.0, 2909.0, 200.0, 449.0, 
-															2789.66, falls_lake_supply_capacity, 
-															falls_lake_wq_capacity, 
-															jordan_lake_supply_capacity, 
-															jordan_lake_wq_capacity,
-															cary.jordanLakeAlloc, 
-															raleigh.jordanLakeAlloc, 
-															durham.jordanLakeAlloc,
-															owasa.jordanLakeAlloc, 
-															cary_treatment_capacity, 
-															durham_cary_capacity, 
-															durham_owasa_capacity, 
-															raleigh_cary_capacity);
+													cary_treatment_capacity, durham_cary_capacity, durham_owasa_capacity, raleigh_cary_capacity, raleigh_durham_capacity,
+													raleigh.jordanLakeAlloc, durham.jordanLakeAlloc, owasa.jordanLakeAlloc, cary.jordanLakeAlloc, teer_quarry_supply_capacity, teer_quarry_intake_capacity, teer_quarry_outflow_capacity, little_river_raleigh_supply_capacity, western_wake_treatment_capacity, durham_reclaimation_capacity, raleigh_quarry_capacity, raleigh_quarry_intake_capacity, raleigh_quarry_outflow_capacity, raleigh_intake_capacity, cary_quarry_capacity, cary_quarry_intake_capacity, cary_quarry_outflow_capacity, owasa.westernWakeTreatmentFrac, durham.westernWakeTreatmentFrac, raleigh.westernWakeTreatmentFrac); //infrastructure included in the model
+		riskOfFailureStorage.initializeReservoirStorageROF(durham_res_supply_capacity, 											cane_creek_supply_capacity,												stone_quarry_supply_capacity, 												university_lake_supply_capacity, 											lake_wheeler_benson_supply_capacity,
+													falls_lake_supply_capacity, falls_lake_wq_capacity,
+													jordan_lake_supply_capacity, jordan_lake_wq_capacity,
+													cary_treatment_capacity, durham_cary_capacity, durham_owasa_capacity, raleigh_cary_capacity, raleigh_durham_capacity,
+													raleigh.jordanLakeAlloc, durham.jordanLakeAlloc, owasa.jordanLakeAlloc, cary.jordanLakeAlloc, teer_quarry_supply_capacity, teer_quarry_intake_capacity, teer_quarry_outflow_capacity, little_river_raleigh_supply_capacity, western_wake_treatment_capacity, durham_reclaimation_capacity, raleigh_quarry_capacity, raleigh_quarry_intake_capacity, raleigh_quarry_outflow_capacity, raleigh_intake_capacity, cary_quarry_capacity, cary_quarry_intake_capacity, cary_quarry_outflow_capacity, owasa.westernWakeTreatmentFrac, durham.westernWakeTreatmentFrac, raleigh.westernWakeTreatmentFrac); 
 		
 		year = simDates.getYear();//passes the dates from the simDates class to the main simulation
 		month = simDates.getMonth();
@@ -1853,6 +1885,7 @@ void Simulation::realizationLoop()
 			crabtreeActualInflow = crabtreeInflows.synthetic[realization][syntheticIndex];
 			jordanActualInflow = jordanInflows.synthetic[realization][syntheticIndex];
 			lillingtonActualInflow = lillingtonInflows.synthetic[realization][syntheticIndex];
+			littleRiverRaleighActualInflow = littleRiverRaleighInflows.synthetic[realization][syntheticIndex];
 		
 			actualEvap = durhamOwasaEvap.synthetic[realization][syntheticIndex];
 			actualFallsEvap = fallsEvap.synthetic[realization][syntheticIndex];
@@ -1862,7 +1895,7 @@ void Simulation::realizationLoop()
 			systemStorage.setInflow(durhamActualInflow, 31.4*owasaActualInflow,
 				28.7*owasaActualInflow, 1.2*owasaActualInflow, fallsActualInflow, wbActualInflow, claytonActualInflow, crabtreeActualInflow, jordanActualInflow, lillingtonActualInflow,
 							raleigh.weeklyDemand*returnRatio[1][week-1], durham.weeklyDemand*returnRatio[0][week-1], durham.weeklyDemand*(returnRatio[1][week-1]-returnRatio[0][week-1]),
-							owasa.weeklyDemand*returnRatio[1][week-1],actualFallsEvap, actualWBEvap, actualEvap);
+							owasa.weeklyDemand*returnRatio[1][week-1],actualFallsEvap, actualWBEvap, actualEvap, littleRiverRaleighActualInflow);
 							
 			if(formulation > 1) 
 			{
@@ -1952,7 +1985,8 @@ void Simulation::realizationLoop()
 			raleigh.weeklyUpdate(numRealizations);
 			cary.weeklyUpdate(numRealizations);
 			if (week == 1)
-			{	
+			{
+				cout<<"REALIZATION"<<realization<<"  YEAR"<<year<<endl;
 				//Adds the contingency payments to the mitigation fund, detemines annual losses
 				if (durham.restrictions+owasa.restrictions+cary.restrictions+raleigh.restrictions!=0)
 				{
