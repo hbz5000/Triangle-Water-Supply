@@ -21,8 +21,7 @@ void InsuranceFund::add(double payment)
 	fundSize += payment;
 }
 
-int InsuranceFund::getInsuranceStage(double demandBaseline, double inflows, double* insuranceOn, double* insuranceOff,
-										bool useInsRisk, double insRisk)
+void InsuranceFund::getInsuranceStage(double demandBaseline, double inflows)
 {
 	insuranceStorage += (inflows - demandBaseline)/capacity;//update the estimated insurance storage
 
@@ -30,34 +29,15 @@ int InsuranceFund::getInsuranceStage(double demandBaseline, double inflows, doub
 		insuranceStorage = 1;
 	else if (insuranceStorage < 0)
 		insuranceStorage = 0;
-
-	// use the estimated insurance storage and triggers to determine the insurance payout in each week
-	if(useInsRisk)
-	{
-		if (insuranceOn[insuranceStage] < insRisk)
-			insuranceStage += 1;
-		while (insuranceOff[insuranceStage] > insRisk)
-			insuranceStage -= 1;
-	}
-	else
-	{
-		if (insuranceOn[insuranceStage] > insuranceStorage)
-			insuranceStage += 1;
-		while (insuranceOff[insuranceStage] < insuranceStorage)
-			insuranceStage -= 1;
-	}
 	
-	return insuranceStage;
+	return;
 }
 
-void InsuranceFund::setInsurancePayment(double payment, int insuranceLevel)
+void InsuranceFund::setInsurancePayment(double payment)
 {
-	if(insuranceStage >= insuranceLevel)
-		insurancePayment = payment;
-	else
-		insurancePayment = 0;
+	fundSize += payment;
 	
-	fundSize += insurancePayment;
+	return;
 }
 
 double InsuranceFund::calcAnnualLosses(double annualRevenue, bool addInterest)

@@ -9,9 +9,8 @@ public:
 	void add(double payment);
 	void initializeRealization();
 	double calcAnnualLosses(double annualRevenue, bool addInterest);
-	int getInsuranceStage(double demandBaseline, double inflows, double* insuranceOn, double* insuranceOff,
-							 bool useInsRisk, double insRisk);
-	void setInsurancePayment(double payment, int insuranceLevel);
+	void getInsuranceStage(double demandBaseline, double inflows);
+	void setInsurancePayment(double payment);
 
 	double capacity;
 	double fundSize, totalDebit;

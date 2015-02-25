@@ -29,6 +29,9 @@ public:
 	void createRiskOfFailure(int real, int synthY, double durhAnnDemand, double owasaAnnDemand, double ralAnnDemand, double carAnnDemand);
 	void createInfrastructureRisk(int real, int synthY, double durhAnnDemand, double owasaAnnDemand, double ralAnnDemand, double carAnnDemand);
 	data_t parameterInput;
+	void createInfrastructure();
+	void triggerInfrastructure(int realization);
+	void updateFallsQuality();
 	
 	WaterUtility durham, owasa, cary, raleigh;
 	TimeSeriesData durhamInflows, owasaInflows, fallsInflows, wheelerInflows, crabtreeInflows, claytonInflows, jordanInflows, lillingtonInflows, littleRiverRaleighInflows;
@@ -37,6 +40,8 @@ public:
 	int formulation;
 	int borgToggle;
 	int solutionNumber;
+	int bondLength;
+	double bondRate;
 	
 private:
 	
@@ -44,7 +49,8 @@ private:
 	Dates simDates;
 	Dates riskOfFailureDates;
 	ReservoirStorage systemStorage;
-	ReservoirStorage riskOfFailureStorage;
+	ReservoirStorage riskOfFailureStorageInf;
+	ReservoirStorage riskOfFailureStorageROF;
 
 	//for calc water price
 	double sewerFractions[12];
@@ -85,7 +91,7 @@ private:
 	double raleighFlowWeekBaseline, raleighFlowWeekBaseline2;
 	int raleighLevel, raleighLevelIns;
 	
-	double durhamSpill, OWASASpill, insuranceFallsInflow, insuranceJordanInflow;
+	double durhamSpill, OWASASpill, raleighSpill, insuranceFallsInflow, insuranceJordanInflow;
 	
 	//other variables
 	int year, month, week, numdays;	
@@ -98,8 +104,16 @@ private:
 	int numFutureYears;
 	int volumeIncrements, costRiskLevel;
 	
-	double *anyFailure;
-	double anyRestrictionFreq, anyFailureMax;
+	
+	double caryUpgrades[4];
+	double ralIntakeInsuranceTrigger;
+	double durhamReclaimedInsuranceTrigger;
+	double wwWTPInsuranceTrigger;
+	double littleRiverRalInsuranceTrigger;
+	double fallsLakeReallocation;
+	
+	double fallsFailurePoint, fallsFailure, maxFallsFailure;
+	double *totalFallsFailure;
 	
 	ofstream out1;
 	ofstream out3;

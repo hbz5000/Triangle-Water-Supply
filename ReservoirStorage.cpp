@@ -7,6 +7,85 @@ using namespace std;
 //{
 //}
 
+void ReservoirStorage::buildULexp()
+{
+	ULCapacity = 2999.0;
+}
+void ReservoirStorage::buildCCexp()
+{
+	CCRCapacity = 5909.0;
+}
+void ReservoirStorage::buildSQlow()
+{
+	StQCapacity = 1700.0;
+}
+void ReservoirStorage::buildSQhigh()
+{
+	StQCapacity = 2400.0;
+}
+void ReservoirStorage::buildTeerQuarry()
+{
+	teerQuarryIntakeCapacity = 15.0;
+	teerQuarryOutflowCapacity = 5.2;
+}
+void ReservoirStorage::buildReclaimedLow()
+{
+	durhamReclaimedCapacity = 2.2;
+}
+void ReservoirStorage::buildReclaimedHigh()
+{
+	durhamReclaimedCapacity = 11.3;
+}
+void ReservoirStorage::buildMichieLow()
+{
+	durhamCapacity = 8849.0;
+}
+void ReservoirStorage::buildMichieHigh()
+{
+	durhamCapacity = 14049.0;
+}
+void ReservoirStorage::buildLittleRiverRal()
+{
+	littleRiverRaleighCapacity = 3700.0;
+}
+void ReservoirStorage::buildRalQuarry()
+{
+	raleighQuarryCapacity = 4000.0;
+	raleighQuarryIntakeCapacity = 50.0;
+	raleighQuarryOutflowCapacity = 18.7;
+}
+void ReservoirStorage::buildNeuseIntake()
+{
+	raleighIntakeCapacity = 16.0;
+}
+void ReservoirStorage::reallocateFallsLake(double fallsLakeReallocation)
+{
+	fallsLakeSupplyCapacity += fallsLakeReallocation;
+	fallsLakeQualityCapacity -= fallsLakeReallocation;
+	fallsLakeSupplyStorage += fallsLakeReallocation;
+	fallsLakeQualityStorage -= fallsLakeReallocation;
+	if(fallsLakeQualityStorage < 0)
+	{
+		fallsLakeSupplyStorage += fallsLakeQualityStorage;
+		fallsLakeQualityStorage = 0;
+	}
+}
+void ReservoirStorage::buildWWWTPlow(double oWTPf, double dWTPf, double rWTPf)
+{
+	westernTreatmentCapacity = 33.0;
+	owasaWWTPcapacity = westernTreatmentCapacity*oWTPf;
+	durhamWWTPcapacity = westernTreatmentCapacity*dWTPf;
+	raleighWWTPcapacity = westernTreatmentCapacity*rWTPf;
+}
+void ReservoirStorage::buildWWWTPhigh(double oWTPf, double dWTPf, double rWTPf)
+{
+	westernTreatmentCapacity = 54.0;
+	owasaWWTPcapacity = westernTreatmentCapacity*oWTPf;
+	durhamWWTPcapacity = westernTreatmentCapacity*dWTPf;
+	raleighWWTPcapacity = westernTreatmentCapacity*rWTPf;
+}
+	
+
 void ReservoirStorage::initializeReservoirStorage(double durhamCap, double CCRCap, double StQCap, double ULCap, double lakeWBCap, double fallsLakeSupplyCap, double fallsLakeQualityCap, double jordanSupplyCap, double jordanQualityCap, double CaryTreatmentCap, double DurhamCaryCap, double DurhamOWASACap, double RaleighCaryCap, double RaleighDurhamCap, double raleighJordanAlloc, double durhamJordanAlloc, double owasaJordanAlloc, double caryJordanAlloc, double teerQCap, double tQIc, double tQOc, double littleRiverRaleighCap, double westTrtCap, double durhamRecCap, double rQc, double rQIc, double rQOc, double rIc, double cQc, double cQIc, double cQOc, double owasaWWWTPFrac, double durhamWWWTPFrac, double raleighWWWTPFrac)
 {
 	//Set reservoir capacities and initial storage volumes
@@ -219,7 +298,7 @@ void ReservoirStorage::openResFiles()
 
 void ReservoirStorage::setDemands(double durham, double owasa, double raleigh, double cary, int numberOfDaysInTheWeek)
 {
-	durhamUse = durham;
+	durhamUse = durham - durhamReclaimedCapacity;
 	OWASAUse = owasa;
 	CaryUse = cary;
 	raleighUse = raleigh;
@@ -877,7 +956,7 @@ double ReservoirStorage::updateRaleighStorage(int week)
 	double intakeDemand;
 	if((fallsLakeSupplyStorage+fallsLakeQualityStorage)<(fallsLakeSupplyCapacity+fallsLakeQualityCapacity))
 	{
-		intakeDemand = raleighIntakeCapacity;
+		intakeDemand = raleighIntakeCapacity*numdays;
 		
 	}
 	else
@@ -1005,7 +1084,7 @@ double ReservoirStorage::updateRaleighStorage(int week)
 		{
 			raleighDemand5 = raleighQuarryOutflowCapacity*numdays;
 			
-			raleighDemand4 = (raleighUse - intakeDemand - raleighWWTPcapacity*numdays)*(raleighJordanStorage/(fallsLakeSupplyStorage+lakeWBStorage+littleRiverRaleighStorage+raleighJordanStorage));
+			raleighDemand4 = (raleighUse - intakeDemand - raleighQuarryOutflowCapacity*numdays)*(raleighJordanStorage/(fallsLakeSupplyStorage+lakeWBStorage+littleRiverRaleighStorage+raleighJordanStorage));
 			if(raleighDemand4 > raleighWWTPcapacity*numdays)
 			{
 				raleighDemand5 = raleighWWTPcapacity*numdays;
@@ -1026,6 +1105,8 @@ double ReservoirStorage::updateRaleighStorage(int week)
 			}
 		}
 	}
+		
+		
 	if(week<13||week>43)
 	{
 		fallsSpillage = numdays*60.0/1.547;///minimum spillage from reservoir
@@ -1075,11 +1156,11 @@ double ReservoirStorage::updateRaleighStorage(int week)
 		}
 	}
 	
+	
 	if((raleighQuarryDiversion + raleighQuarryStorage - raleighDemand5)>raleighQuarryCapacity)
 	{
 		raleighQuarryDiversion = raleighQuarryCapacity - raleighQuarryStorage + raleighDemand5;
 	}
-	
 	
 	///////////Falls Lake Water Balance////////////////////
 	//area calculation for evaporation
@@ -1091,7 +1172,6 @@ double ReservoirStorage::updateRaleighStorage(int week)
 	{
 		fallsArea = .28*(fallsLakeSupplyStorage+fallsLakeQualityStorage+5734);
 	}
-	
 	////Inflows are divided between the water storage supply and water quality supply proportionatly (14.7BG supply storage, 20 BG quality storage)
 	////Durham reservoir releases and wastewater returns are added to Falls Lake inflows
 	fallsSupplyInflow = (fallsInflow + durhamSpillage - fallsArea*evapF + durhamReturn)*(14.7/34.7);
@@ -1104,6 +1184,7 @@ double ReservoirStorage::updateRaleighStorage(int week)
 	if (fallsLakeQualityStorage > fallsLakeQualityCapacity)
 	{
 		////If excess water quality storage exists, it is allocated to the water supply storage portion of Falls Lake
+		
 		fallsSupplyInflow += fallsLakeQualityStorage - fallsLakeQualityCapacity;
 		fallsQualityInflow += fallsLakeQualityCapacity - fallsLakeQualityStorage;
 		fallsLakeQualityStorage = fallsLakeQualityCapacity;
@@ -1115,7 +1196,6 @@ double ReservoirStorage::updateRaleighStorage(int week)
 	
 	////Municipal water demand comes from the water suply storage portion of Falls Lake
 	fallsLakeSupplyStorage += fallsSupplyInflow - raleighDemand1;
-	
 	/////boundry conditions on water supply storage in Falls Lake (don't need to keep track of excess spillage from Falls Lake)
 	if (fallsLakeSupplyStorage>fallsLakeSupplyCapacity)
 	{
@@ -1133,8 +1213,7 @@ double ReservoirStorage::updateRaleighStorage(int week)
 	littleRiverRaleighStorage +=littleRiverRaleighInflow - raleighDemand3 - raleighLittleRiverSpillage + evapF*(320.0+826.0*(littleRiverRaleighStorage/(.001+littleRiverRaleighCapacity)));
 	
 	raleighQuarryStorage += raleighQuarryDiversion - evap*(20 + 30*(raleighQuarryStorage/(raleighQuarryCapacity+.001))) - raleighDemand5;
-	
-	
+		
 	if(lakeWBStorage>lakeWBCapacity)
 	{
 		lakeWBSpillage+=lakeWBStorage - lakeWBCapacity;
@@ -1149,6 +1228,10 @@ double ReservoirStorage::updateRaleighStorage(int week)
 	{
 		fallsSpillage+=fallsLakeSupplyStorage - fallsLakeSupplyCapacity;
 		fallsLakeSupplyStorage = fallsLakeSupplyCapacity;
+	}
+	if(raleighQuarryStorage>raleighQuarryCapacity)
+	{
+		raleighQuarryStorage = raleighQuarryCapacity;
 	}
 	if(lakeWBStorage<0)
 	{
@@ -1316,9 +1399,44 @@ double ReservoirStorage::getDurhamSpillage()
 {
 	return durhamSpillage;
 }
-void ReservoirStorage::upgradeCaryTreatmentPlant()
+double ReservoirStorage::getDurhamReclaimedCap()
 {
-	CaryTreatmentCapacity = 56;
+	return durhamReclaimedCapacity;
+}
+double ReservoirStorage::getDurhamTreatment()
+{
+	return durhamWWTPcapacity;
+}
+double ReservoirStorage::getOWASATreatment()
+{
+	return owasaWWTPcapacity;
+}
+double ReservoirStorage::getRaleighTreatment()
+{
+	return raleighWWTPcapacity;
+}
+double ReservoirStorage::getRaleighIntake()
+{
+	return raleighIntakeCapacity;
+}
+double ReservoirStorage::getFallsQuality()
+{
+	return fallsLakeQualityStorage/fallsLakeQualityCapacity;
+}
+void ReservoirStorage::upgradeCaryTreatmentPlant(int counter)
+{
+	if(counter == 0)
+	{
+		CaryTreatmentCapacity = 64;
+	}
+	else if(counter == 1)
+	{
+		CaryTreatmentCapacity = 72;
+	}
+	else
+	{
+		CaryTreatmentCapacity = 80;
+	}
 }
 void ReservoirStorage::upgradeCaryTreatmentPlant2()
 {

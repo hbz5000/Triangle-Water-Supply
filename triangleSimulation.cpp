@@ -99,7 +99,7 @@ int main (int argc, char *argv[])
 	simulation.setNumRealizations(numRealizations);
 	
 	int startYear = 2010;
-	int endYear = 2025;
+	int endYear = 2040;
 	
 	int terminateYear = endYear-startYear+1;
 	simulation.setNumYears(terminateYear);
@@ -109,7 +109,7 @@ int main (int argc, char *argv[])
 	srand(1);
 	
 	//variables for interfacing with algorithm
-	int c_num_dec = 31;
+	int c_num_dec = 53;
 	double *c_xreal; 
 	general_1d_allocate(c_xreal, c_num_dec);	
 	
@@ -163,37 +163,16 @@ int main (int argc, char *argv[])
 	{
 		if (simulation.formulation == 0)
 		{
-			c_num_obj = 3;//Number of objective variables
-			c_num_constr = 3;//Objective variable formulation
+			c_num_obj = 5;//Number of objective variables
+			c_num_constr = 5;//Objective variable formulation
 		}
 		else if (simulation.formulation == 1)
 		{
-			c_num_obj = 3;//Number of objective variables
-			c_num_constr = 3;//Objective variable formulation
+			c_num_obj = 6;//Number of objective variables
+			c_num_constr = 6;//Objective variable formulation
 		}
 		else if (simulation.formulation == 2)
 		{
-			c_num_obj = 4;//Number of objective variables
-			c_num_constr = 4;//Objective variable formulation
-		}
-		else if (simulation.formulation == 3)// Five objective formulation, using reliability, restriction frequency, average transfer volume, 
-		{								   // mitigation cost, and frequency of mitigation exceedence, using no mitigation						   
-			c_num_obj = 5;//Number of objective variables
-			c_num_constr = 5;//Objective variable simulation.formulation
-		}
-		else if (simulation.formulation == 4)// Five objective formulation, using reliability, restriction frequency, average transfer volume, 
-		{								   // mitigation cost, and frequency of mitigation exceedence using only contingency funds for mitigation
-			c_num_obj = 5;//Number of objective variables
-			c_num_constr = 5;//Objective variable formulation
-		}
-		else if (simulation.formulation == 5)// Five objective formulation, using reliability, restriction frequency, average transfer volume, 
-		{								   // mitigation cost, and frequency of mitigation exceedence using contingency funds and third party insurance
-			c_num_obj = 5;//Number of objective variables
-			c_num_constr = 5;//Objective variable formulation
-		}
-		else//Six objective formulation, using reliability, restriction frequency, average transfer volume, 
-		{								   // mitigation cost, frequency of mitigation exceedence, and drought surcharge burden on consumers
-										   //Includes drought surcharges
 			c_num_obj = 6;//Number of objective variables
 			c_num_constr = 6;//Objective variable formulation
 		}
@@ -263,7 +242,7 @@ int main (int argc, char *argv[])
 	}
 	else // If running from parameter input file (no constraints here)
 	{
-		int c_num_obj = 24;
+		int c_num_obj = 21;
 		general_1d_allocate(c_obj, c_num_obj);
 		simulation.initializeFormulation(c_num_obj, 0);
 		
@@ -271,7 +250,7 @@ int main (int argc, char *argv[])
 		
 		// Read a certain number of parameter sets from a file
 		int numSolutions = 1;		
-		readFile(simulation.parameterInput, "./inputfiles/parameterInputFile_O0_F2.csv", numSolutions, c_num_dec);
+		//readFile(simulation.parameterInput, "./inputfiles/parameterInputFile_O0_F2.csv", numSolutions, c_num_dec);
 		
 		// Set up the output stream for objective values
 		ofstream out1;
@@ -284,9 +263,9 @@ int main (int argc, char *argv[])
 			simulation.calculation(c_xreal, c_obj, c_constr);
 			for (int x = 0; x < c_num_obj; x++)
 			{
-				out1 << c_obj[x] << ",";
+				cout << c_obj[x] << ",";
 			}
-			out1 << endl;
+			cout << endl;
 		}
 		
 		out1.close();

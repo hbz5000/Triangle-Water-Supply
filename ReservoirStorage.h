@@ -35,11 +35,32 @@ public:
 	double getRaleighTransfers();
 	double getDurhamSpillage();
 	double getOWASASpillage();
-	void upgradeCaryTreatmentPlant();
+	double getDurhamReclaimedCap();
+	double getDurhamTreatment();
+	double getOWASATreatment();
+	double getRaleighTreatment();
+	double getRaleighIntake();
+	double getFallsQuality();
+	void upgradeCaryTreatmentPlant(int counter);
 	void upgradeCaryTreatmentPlant2();
 	void upgradeDurhamCaryConnection();
 	void upgradeDurhamOWASAConnection();
 	void openResFiles();
+	void buildULexp();
+	void buildCCexp();
+	void buildSQlow();
+	void buildSQhigh();
+	void buildTeerQuarry();
+	void buildReclaimedLow();
+	void buildReclaimedHigh();
+	void buildMichieLow();
+	void buildMichieHigh();
+	void buildLittleRiverRal();
+	void buildRalQuarry();
+	void buildNeuseIntake();
+	void reallocateFallsLake(double fallsLakeRe);
+	void buildWWWTPlow(double oF, double dF, double rF);
+	void buildWWWTPhigh(double oF, double dF, double rF);
 
 private:
 	

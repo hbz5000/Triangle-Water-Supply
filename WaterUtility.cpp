@@ -12,7 +12,6 @@ WaterUtility::~WaterUtility()
 	zap(costPerMG, numMonths*numFutureYears);
 	zap(consumerSurplusPerMG, numMonths);
 	zap(reductions, numMonths);
-	zap(insurancePayment);
 	zap(demandBaseline, terminateYear);
 	zap(individualReductions, numAnnualDecisionPeriods);
 	zap(restrictionsOnTemplate, 2);
@@ -27,7 +26,6 @@ WaterUtility::~WaterUtility()
 	zap(PDFIrr, 16); zap(PDFNon, 16);
 	zap(CDFIrr, 16); zap(CDFNon, 16);
 	zap(demandVariation, numRealizations);
-	zap(weeklyTransferTriggers, terminateYear);
 	zap(waterPrice_Irr);
 	zap(waterPrice_NonIrr);
 	zap(waterPrice);
@@ -38,10 +36,16 @@ WaterUtility::~WaterUtility()
 	zap(demand2DIrr, 18); zap(demand2DNon, 18);
 	zap(actualPDF, 16);
 	zap(riskOfFailure, 20);
+	zap(probReach, 20);
+	zap(infMatrix, infrastructureCount);
+	zap(annualPayments, terminateYear);
+	zap(netPresentCostInfrastructure);
+	
+
 }
 
 void WaterUtility::configure(int nmonths, int nyears, int ntypes, int ntiers, int nstages, int nfutureyears, double failure, int nannualdecisionperiods, int termyear, 
-		int volumeIncrements, int nrealizations, int formulation)
+		int volumeInc, int nrealizations, int formulation, int infCount)
 {
 	numMonths = nmonths;
 	numYears = nyears;
@@ -57,12 +61,20 @@ void WaterUtility::configure(int nmonths, int nyears, int ntypes, int ntiers, in
 	ROF_resIns = 0;
 	terminateYear = termyear;
 	numRealizations = nrealizations;
-	restrictionIncrement = 1.0/(52.0*double(terminateYear)*double(numRealizations));
+	volumeIncrements = volumeInc;
+	weeklyTransferTriggers = 0.0;
+	if(formulation<2)
+	{
+		infrastructureCount = infCount;
+	}
+	else
+	{
+		infrastructureCount = infCount + 2;
+	}
 	
 	// Initialize pointers to null
 	waterPrice = NULL; waterPrice_Irr = NULL; waterPrice_NonIrr = NULL;
 	droughtSurcharges = NULL;
-	weeklyTransferTriggers = NULL;
 	inflows1DIrr = NULL, inflows1DNon = NULL, demand1DIrr = NULL, demand1DNon = NULL;
 	inflows2DIrr = NULL, inflows2DNon = NULL, demand2DIrr = NULL, demand2DNon = NULL;
 	
@@ -70,9 +82,7 @@ void WaterUtility::configure(int nmonths, int nyears, int ntypes, int ntiers, in
 	general_2d_allocate(costPerMG, numMonths*nfutureyears, numStages, 0.0);
 	general_2d_allocate(consumerSurplusPerMG, numMonths, numStages, 0.0);
 	general_2d_allocate(reductions, numMonths, numStages, 0.0);
-	general_1d_allocate(insurancePayment, numStages, 0.0);
 	general_2d_allocate(demandBaseline, terminateYear, 52, 0.0);
-	general_2d_allocate(weeklyTransferTriggers, terminateYear, 52, 0.0);
 	
 	// total utility water use reduction targets and seasonal restriction triggers
 	general_2d_allocate(individualReductions, numAnnualDecisionPeriods, numStages);
@@ -94,6 +104,13 @@ void WaterUtility::configure(int nmonths, int nyears, int ntypes, int ntiers, in
 	general_2d_allocate(actualPDF, 16, 17, 0.0);
 	
 	general_2d_allocate(riskOfFailure, 20, 52, 0.0);
+	general_2d_allocate(probReach, 20, 52, 0.0);
+	
+	general_2d_allocate(infMatrix,infrastructureCount, 5, 0.0);
+	general_2d_allocate(annualPayments, terminateYear, numRealizations, 0.0);
+	general_1d_allocate(netPresentCostInfrastructure, numRealizations, 0.0);
+
+	
 	
 	if(formulation == 0)
 		usesROF = false;
@@ -106,7 +123,14 @@ void WaterUtility::setCapacity(double cap)
 {
 	Fund.capacity = cap;
 }
-
+void WaterUtility::addCapacity(double cap)
+{
+	Fund.capacity += cap;
+}
+void WaterUtility::addInsStorage(double addition)
+{
+	Fund.insuranceStorage += addition;
+}
 void WaterUtility::writeInflowDemandPDF(int inflowR, int UDr, int rows_PDF, int cols_PDF, double size1, double size2, int irrC, int nonC1, int nonC2, TimeSeriesData* Inflows)
 {
 	// Local variables intermediate calculations
@@ -178,21 +202,18 @@ void WaterUtility::writeInflowDemandPDF(int inflowR, int UDr, int rows_PDF, int 
 	}
 }
 
-void WaterUtility::setInsurancePayment(double demandBaseline, double inflows, int numRealizations, int terminateYear, int numdays, int week, int month, int year)
+void WaterUtility::setInsurancePayment(double demandBaseline, double inflows)
 {
-	int insuranceStage;
-	double currentPayment;
-	int timeIndex = month-1+(year-1)*12;
 	
-	insuranceStage = Fund.getInsuranceStage(demandBaseline, inflows, restrictionsOn, restrictionsOff, usesROF, ROF_resIns);
-	
-	currentPayment = UD.averages[week-1]*numdays*averageUse*(costPerMG[timeIndex][0] - costPerMG[timeIndex][insuranceStage]*reductions[month-1][insuranceStage]);
-	
-	Fund.setInsurancePayment(currentPayment, insuranceUse);
-	insuranceCost += Fund.insurancePayment*insurancePremium/(double(numRealizations)*double(terminateYear));
+	if(ROF_resIns>insuranceUse)
+	{
+		Fund.setInsurancePayment(insurancePayment);
+	}
+	Fund.getInsuranceStage(demandBaseline, inflows);
+
 }
 
-void WaterUtility::generateDemandVariation(int numRealizations, int numWeeks, int numYears, TimeSeriesData *Inflows, double demand_variation_multiplier)
+void WaterUtility::generateDemandVariation(int numWeeks, TimeSeriesData *Inflows, double demand_variation_multiplier)
 {
 	
 	int totalNumber, partialNumber, counter, index;
@@ -202,7 +223,7 @@ void WaterUtility::generateDemandVariation(int numRealizations, int numWeeks, in
 	
 	for (int realization = 0; realization < numRealizations; realization++)
 	{
-		for (int years = 0; years<numYears;years++)
+		for (int years = 0; years<terminateYear;years++)
 		{
 			for (int week = 0; week < numWeeks; week++)
 			{	
@@ -286,23 +307,19 @@ void WaterUtility::calculateRestrictions(int year, int week, int numdays, int mo
 		restrictionReduction = reductions[month-1][restrictionStage];
 		restrictedDemand = weeklyDemand*restrictionReduction;
 		currentCostPerMG = costPerMG[month-1+(year-1)*12][restrictionStage];
-		consumerSurplusLoss = ((restrictedDemand*currentCostPerMG) / (weeklyDemand*baselineCostPerMG)) - 1;
-		consumerCount += 1;
 		
 		// Revenues lost due to restrictions
 		demandDeficit = weeklyDemand*baselineCostPerMG - restrictedDemand*currentCostPerMG;
 		weeklyDemand = restrictedDemand; // update actual demand under restrictions
-		restrictions += restrictionIncrement; // tally restriction frequency
-		Fund.subtract(demandDeficit); // dip into the insurance fund to cover demand deficit
+		Fund.subtract(demandDeficit/1000000.0); // dip into the insurance fund to cover demand deficit
 	}
 	else
 	{
 		demandDeficit = 0;
-		consumerSurplusLoss = 0;
 	}
 }
 
-void WaterUtility::calcTransferTriggers(int volumeIncrements, int terminateYear)
+void WaterUtility::calcTransferTriggers(int week)
 {	
 	int transferLevel = volumeIncrements-1;
 	double ROF = 0;	
@@ -310,68 +327,56 @@ void WaterUtility::calcTransferTriggers(int volumeIncrements, int terminateYear)
 	//Calculating risk-of-failure for transfers - need to find the storage level corresponding with the 'acceptable' risk-of-failure.  Once that storage level is calculated,
 	//transfers will be requested up to that point by the utilities.  Storage requests can only be granted to the limits of transfer infrastructure
 	
-	for(int year = 0; year < terminateYear; year++)
-	{
-		for(int week = 0; week < 52; week++)
-		{	
-			//Triggers are translated into a reservoir storage level
-			if (TTriggerN == 2)
-				weeklyTransferTriggers[year][week] = -1;
+	transferLevel = volumeIncrements;
+	ROF = 0;
 			
-			else
-			{	
-				transferLevel = volumeIncrements - 1;
-				ROF = 0;
-				
-				while(ROF < TTriggerI && transferLevel > -1)//Runs through the discritizations of reservoir storage to find the first 'bin' in the given week that has
-				{													//a risk-of-failure larger than the transfer trigger
-					ROF = riskOfFailure[transferLevel][week];
-					transferLevel--;
-				}
-
-				weeklyTransferTriggers[year][week] = double(transferLevel + 1)/double(volumeIncrements);
-			}
-		}
+	while(ROF < TTriggerI && transferLevel > -1)//Runs through the discritizations of reservoir storage to find the first 'bin' in the given week that has
+	{													//a risk-of-failure larger than the transfer trigger
+		transferLevel--;
+		ROF = riskOfFailure[transferLevel][week-1];
 	}
+
+	weeklyTransferTriggers = double(transferLevel + 1)/double(volumeIncrements);
+
 }
 
-void WaterUtility::clearVariablesForSimulation(int numRealizations, int terminateYear)
+void WaterUtility::clearVariablesForSimulation()
 {  
 	//Initial values for objective variables
-	restrictionFreq=0; freqLosses = 0;
-	maxFailures = 0; totalCosts = 0;
-	totalLosses = 0; consumerFractions = 0;
-	week_of_last_restrictions = 0;
+	maxFailures = 0.0; 
+	totalLosses = 0.0;
+	peakDebt = 0.0;
+	expectedNPC = 0.0;
 	
-	// Other variables to reset before running the realizations
-	insuranceCost = 0; averageRevenue = 0;
-	simLosses = 0;
-	maxLosses = 0;
 	
 	annualCosts.clear();
 	for (int x = 0; x < numRealizations; x++)
-		annualCosts.push_back(0.0);
+	{
+		for(int y = 0; y< terminateYear; y++)
+		{
+			annualCosts.push_back(0.0);
+			annualPayments[y][x] = 0.0;
+		}
+		netPresentCostInfrastructure[x] = 0.0;
+	}
 	
 	zeroes(totalFailures, terminateYear); // keep track of failures per year
 	
 	//Variables to calculate losses that occur to consumers and water utilities, respectively
-	totalConsumerLoss = 0;
-	totalUtilityLoss = 0;
 	yearlyFailure = 0;
-	restrictions = 0;
-	consumerCount = 0;
 }
 
 void WaterUtility::clearVariablesForRealization(int year)
 {
+	for(int x = 0; x< infrastructureCount; x++)
+	{
+		infMatrix[x][1] = 0.0;
+		infMatrix[x][3] = 0.0;
+	}
 	averageUse = futureDemand[year-1];
 	restrictionStage = 0;
 	storageFraction = 1;
 	annualRevenue = 0;
-	restrictions = 0;
-	freqLossesint = 0;	
-	maxLosses = 0;
-	week_of_last_restrictions = 0;
 	Fund.initializeRealization();
 }
 
@@ -414,73 +419,69 @@ int WaterUtility::getPDFIndex(double inflow)
 	return counterAsInt;
 }
 
-void WaterUtility::annualUpdate(int year, int numRealizations, int terminateYear)
+void WaterUtility::annualUpdate(int year, int realization)
 {
 	bool addInterest = true;
-	double thisYearLosses = 0;
-	
-		
+	annualRevenue = annualRevenue/1000000.0;
 	Fund.add(annualRevenue*annualPayment);
-	thisYearLosses = Fund.calcAnnualLosses(annualRevenue, addInterest);
-	simLosses += thisYearLosses;
-	if(thisYearLosses>maxLosses)
+	if((year+1)<terminateYear)
 	{
-		maxLosses = thisYearLosses;
+		priceInsurance(year+1, realization);
 	}
+	annualPayments[year - 1][realization] += annualRevenue*annualPayment;
+	annualPayments[year - 1][realization] = annualPayments[year - 1][realization]/annualRevenue;
+	
+	annualCosts[realization*terminateYear + year - 1] = Fund.calcAnnualLosses(annualRevenue, addInterest);
+
 	
 	averageUse = futureDemand[year];
-	averageRevenue += annualRevenue/(double(numRealizations)*double(terminateYear));
 	annualRevenue = 0;
 	
-	if (restrictions != 0)
-		restrictionFreq += 1.0/(double(numRealizations)*double(terminateYear));
 	if (yearlyFailure != 0)
 		totalFailures[year-1] += 1/(double(numRealizations));
 	
-	restrictions = 0;
 	yearlyFailure = 0;	
-	freqLossesint = 0;
 }
 
-void WaterUtility::weeklyUpdate(int numRealizations)
+void WaterUtility::weeklyUpdate()
 {
 	//determine and keep track of reservoir failures
 	if (storageFraction < failurePoint)
 		yearlyFailure += 1/(52*double(numRealizations));
-
-	//Tallying total transfer volume (resets every year)
-	freqLossesint += weeklyTransferVolume;
-	
-	//Estimate consumer and utility losses to restrictions
-	totalUtilityLoss += demandDeficit;
-	totalConsumerLoss += consumerSurplusLoss;
 }
 
-void WaterUtility::calculateObjectives(int terminateYear, int numRealizations)
+void WaterUtility::calculateObjectives()
 {
-	int costRiskLevel = int(numRealizations*.99);
+	int costRiskLevel = int(numRealizations*terminateYear*.99);
 	
 	//Highest annual failure rate during any one year of the simulation
 	for (int year = 0; year < terminateYear; year++)
 		if (totalFailures[year] > maxFailures)
 			maxFailures = totalFailures[year];
+		
+	for (int realization = 0; realization< numRealizations; realization++)
+	{
+		double maxPayment = 0.0;
+		for (int year = 0; year< terminateYear; year++)
+		{
+			if(annualPayments[year][realization]>maxPayment)
+			{
+				maxPayment = annualPayments[year][realization];
+			}
+		}
+		peakDebt += maxPayment/double(numRealizations);
+		expectedNPC += netPresentCostInfrastructure[realization]/double(numRealizations);
+	}
 	
 	//Average utility costs, including mitigation costs 
-	totalCosts = simLosses/(double(numRealizations)*double(terminateYear));
 	
 	//Adding the mitigation costs to total costs
-	double addFunds = (insuranceCost + annualPayment*averageRevenue)/averageRevenue;
-	totalCosts += addFunds;
 	
 	//Worst case scenario (95% VAR) mitigation costs
  	sort(annualCosts.begin(), annualCosts.end());
-	totalLosses = annualCosts[costRiskLevel] + addFunds - totalCosts;
+	totalLosses = annualCosts[costRiskLevel];
 	
 	//Percent of the financial burden of restrictions felt by the consumer
-	if (consumerCount!=0)
-	   consumerFractions = totalConsumerLoss/consumerCount;
-	else
-	   consumerFractions = 0;
 }
 
 void WaterUtility::calcWaterPrice(double elasticity_Of_Demand[])
@@ -948,3 +949,78 @@ bool WaterUtility::tierIsResidential(int tier)
 	else
 		return false;
 }
+int WaterUtility::buildInfrastructure(int infIndex)
+{
+	int indexValue = 0;
+	if(infMatrix[infIndex][3] == 3.0)
+	{
+		indexValue = 1;
+	}
+	else if(infMatrix[infIndex][3] > 0.0)
+	{
+		infMatrix[infIndex][3] += 1.0;
+	}
+	
+ return indexValue;
+}
+int WaterUtility::startNewInfrastructure(int year)
+{
+	double rankValue = 0.0;
+	int indexValue = 999;
+	for(int x = 0; x<infrastructureCount;x++)
+	{
+		if( infMatrix[x][1] < 1.0 && year >= int(infMatrix[x][2]) )
+		{
+			if(infMatrix[x][0]>rankValue && infMatrix[x][0] < 1.0)
+			{
+				indexValue = x;
+				rankValue = infMatrix[x][0];
+			}
+		}
+	}
+	if(indexValue<infrastructureCount)
+	{
+		infMatrix[indexValue][1] = 1.0;
+	}
+	return indexValue;
+}
+void WaterUtility::addDebt(int year, int realization, double amount, int repaymentYears, double rate)
+{
+	int endYear;
+	if((year + repaymentYears)>terminateYear)
+	{
+		endYear = terminateYear;
+	}
+	else
+	{
+		endYear = year+ repaymentYears - 1;
+	}
+	for(int x = year;x<endYear;x++)
+	{
+		annualPayments[x][realization] += amount/((1-(1/pow((1+rate),double(repaymentYears))))/rate);
+	}
+	netPresentCostInfrastructure[realization]+= amount/(pow(1.05,(double(year-3))));
+}
+void WaterUtility::priceInsurance(int year, int realization)
+{
+	int earliestToggle;
+	double riskOfTrigger = 0;
+	
+	for (int startingWeek = 1;  startingWeek<53; startingWeek++)//determines the week of the year from which to calculate risk
+	{
+		earliestToggle = 0;
+		for (int startingVolume = volumeIncrements-1; startingVolume>=0; startingVolume--)// 
+		{	
+			if(riskOfFailure[startingVolume][startingWeek - 1]>insuranceUse&&earliestToggle == 0)
+			{
+				riskOfTrigger+=probReach[startingVolume][startingWeek-1];
+				earliestToggle = 1;
+			}		
+		}
+	}
+	annualPayments[year][realization] += insurancePremium*riskOfTrigger*insurancePayment;
+		
+return;
+}
+
+
