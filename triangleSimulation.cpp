@@ -99,7 +99,7 @@ int main (int argc, char *argv[])
 	simulation.setNumRealizations(numRealizations);
 	
 	int startYear = 2010;
-	int endYear = 2040;
+	int endYear = 2060;
 	
 	int terminateYear = endYear-startYear+1;
 	simulation.setNumYears(terminateYear);
@@ -196,8 +196,8 @@ int main (int argc, char *argv[])
 			FILE* outputFile = NULL;
 			
 			BORG_Algorithm_ms_startup(&argc, &argv);
-			BORG_Algorithm_ms_max_evaluations(10000);
-			BORG_Algorithm_output_frequency(1000);
+			BORG_Algorithm_ms_max_evaluations(100);
+			BORG_Algorithm_output_frequency(10);
 			BORG_Problem problem = BORG_Problem_create(c_num_dec, c_num_obj, c_num_constr, calculationWrapperFunction);
 			
 			// Set all the parameter bounds and epsilons

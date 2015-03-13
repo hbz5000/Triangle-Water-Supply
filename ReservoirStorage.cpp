@@ -263,31 +263,56 @@ void ReservoirStorage::initializeReservoirStorageROF(double durhamCap, double CC
 	return;
 }
 
-void ReservoirStorage::updateReservoirStorageROF(double storageVolume, double storageIncrements)
+void ReservoirStorage::updateReservoirStorageROF(double durhamS, double teerS, double CCRS, double ULS, double STQS, double owasaS, double lakeWBS, double flSS, double flQS, double jlSS, double jlQS, double caryJordanS, double raleighJordanS, double durhamJordanS, double owasaJordanS, double littleRiverRalS, double raleighQS)
 {
 	//Same as above, allowing for variable initial reservoir storage
-	double initialStorage = (storageVolume/storageIncrements);
-	durhamStorage=durhamCapacity*initialStorage;
-	teerQuarryStorage = teerQuarryCapacity*initialStorage;
-	CCRStorage = CCRCapacity*initialStorage;
-	ULStorage = ULCapacity*initialStorage;
-	StQStorage = StQCapacity*initialStorage;
-	OWASAStorage = OWASACapacity*initialStorage;
-	lakeWBStorage = lakeWBCapacity*initialStorage;
-	fallsLakeSupplyStorage = fallsLakeSupplyCapacity*initialStorage;
-	fallsLakeQualityStorage = fallsLakeQualityCapacity*initialStorage;
-	jordanLakeSupplyStorage = jordanLakeSupplyCapacity*initialStorage;
-	jordanLakeQualityStorage = jordanLakeQualityCapacity*initialStorage;
+	durhamStorage=durhamS;
+	teerQuarryStorage = teerS;
+	CCRStorage = CCRS;
+	ULStorage = ULS;
+	StQStorage = STQS;
+	OWASAStorage = owasaS;
+	lakeWBStorage = lakeWBS;
+	fallsLakeSupplyStorage = flSS;
+	fallsLakeQualityStorage = flQS;
+	jordanLakeSupplyStorage = jlSS;
+	jordanLakeQualityStorage = jlQS;
 	durhamRequest = 0;//Durham intial transfer request
 	owasaRequest = 0;//OWASA initial transfer request
 	raleighRequest = 0;//Raleigh initial transfer request
-	caryJordanStorage = caryJordanCapacity*initialStorage;
-	raleighJordanStorage = raleighJordanCapacity*initialStorage;
-	durhamJordanStorage = durhamJordanCapacity*initialStorage;
-	owasaJordanStorage = owasaJordanCapacity*initialStorage;
-	littleRiverRaleighStorage = littleRiverRaleighCapacity*initialStorage;
-	raleighQuarryStorage = raleighQuarryCapacity*initialStorage;
-	caryQuarryStorage = caryQuarryCapacity*initialStorage;
+	caryJordanStorage = caryJordanS;
+	raleighJordanStorage = raleighJordanS;
+	durhamJordanStorage = durhamJordanS;
+	owasaJordanStorage = owasaJordanS;
+	littleRiverRaleighStorage = littleRiverRalS;
+	raleighQuarryStorage = raleighQS;
+	caryQuarryStorage = 0;
+	return;
+}
+void ReservoirStorage::updateReservoirStorageROF()
+{
+	//Same as above, allowing for variable initial reservoir storage
+	durhamStorage=durhamCapacity;
+	teerQuarryStorage = teerQuarryCapacity;
+	CCRStorage = CCRCapacity;
+	ULStorage = ULCapacity;
+	StQStorage = StQCapacity;
+	OWASAStorage = OWASACapacity;
+	lakeWBStorage = lakeWBCapacity;
+	fallsLakeSupplyStorage = fallsLakeSupplyCapacity;
+	fallsLakeQualityStorage = fallsLakeQualityCapacity;
+	jordanLakeSupplyStorage = jordanLakeSupplyCapacity;
+	jordanLakeQualityStorage = jordanLakeQualityCapacity;
+	durhamRequest = 0;//Durham intial transfer request
+	owasaRequest = 0;//OWASA initial transfer request
+	raleighRequest = 0;//Raleigh initial transfer request
+	caryJordanStorage = caryJordanCapacity;
+	raleighJordanStorage = raleighJordanCapacity;
+	durhamJordanStorage = durhamJordanCapacity;
+	owasaJordanStorage = owasaJordanCapacity;
+	littleRiverRaleighStorage = littleRiverRaleighCapacity;
+	raleighQuarryStorage = raleighQuarryCapacity;
+	caryQuarryStorage = 0;
 	return;
 }
 void ReservoirStorage::openResFiles()
@@ -315,32 +340,26 @@ void ReservoirStorage::getReturnRatios(double raleighR, double durhamR)
 
 void ReservoirStorage::calcTransfers(double transferDurham, double durhamRisk, double transferOWASA, double owasaRisk, double transferRaleigh, double raleighRisk, double OWASAD)
 {
-	double durhamRequestO = 0.0;
-	double owasaRequestO = 0.0;
-	double raleighRequestO = 0.0;
-	percentFull_O = OWASAStorage/OWASACapacity;//Actual OWASA reservoir storage as a percentage of capacity
-	percentFull_D = durhamStorage/durhamCapacity;//Actual Durham reservoir storage as a percentage of capacity
-	percentFull_R = (fallsLakeSupplyStorage)/(fallsLakeSupplyCapacity);//Actual Raleigh reservoir storage as a percentage of capacity
+	double durhamRequestO;
+	double owasaRequestO;
+	double raleighRequestO;
 	
 	//Determines how much water each utility needs to request to reach an acceptable risk-of-failure
-	if (percentFull_O<transferOWASA)
-		owasaRequestO = (transferOWASA-percentFull_O)*OWASACapacity;
+	if (owasaRisk>transferOWASA)
+		owasaRequestO = 1.0;
 	else
 		owasaRequestO = 0.0;
 			
-	if (percentFull_D<transferDurham)
-		durhamRequestO = (transferDurham-percentFull_D)*durhamCapacity;
+	if (durhamRisk>transferDurham)
+		durhamRequestO = 1.0;
 	else
 		durhamRequestO = 0.0;
 	
-	if (percentFull_R<transferRaleigh)
-		raleighRequestO = (transferRaleigh - percentFull_R)*(fallsLakeSupplyCapacity+lakeWBCapacity+littleRiverRaleighCapacity);
+	if (raleighRisk>transferRaleigh)
+		raleighRequestO = 1.0;
 	else
 		raleighRequestO = 0.0;
 		
-	durhamRequest = durhamRequestO;
-	raleighRequest = raleighRequestO;
-	owasaRequest = owasaRequestO;
 		
 	////Cary wants at least a 5 MGD buffer of unused capacity in its treatment plant
 	caryTreatmentBuffer = 5.0*numdays;
@@ -386,98 +405,80 @@ void ReservoirStorage::calcTransfers(double transferDurham, double durhamRisk, d
 	}
 	else///////////////check infrastructure constraints
 	{
-		////////Check Cary WTP (through line 451)
-		if((durhamRequest+owasaRequest+raleighRequest)>caryExtraCapacity)
-		{	
-			/////If Cary WTP capacity is limiting factor, available capacity is 
-			/////proportional to the risk of failure at each utility
-			durhamRequest = caryExtraCapacity*durhamRisk/(raleighRisk+owasaRisk+durhamRisk+.00001);
-			owasaRequest = caryExtraCapacity*owasaRisk/(raleighRisk+owasaRisk+durhamRisk+.00001);
-			raleighRequest = caryExtraCapacity*raleighRisk/(raleighRisk+owasaRisk+durhamRisk+.00001);
-			///////then check to make sure no utility gets more than they ask for, re-divide extra capacity
-			if(durhamRequest>durhamRequestO)
+		////////Check Cary WTP (through line 480)
+		/////Figure out transfers as if the Cary WTP is the limiting factor
+		durhamRequest = (caryExtraCapacity*durhamRisk*durhamRequestO)/(raleighRisk*raleighRequestO+owasaRisk*owasaRequestO+durhamRisk*durhamRequestO+.00001);
+		
+		owasaRequest = (caryExtraCapacity*owasaRisk*owasaRequestO)/(raleighRisk*raleighRequestO+owasaRisk*owasaRequestO+durhamRisk*durhamRequestO+.00001);
+		
+		raleighRequest = (caryExtraCapacity*raleighRisk*raleighRequestO)/(raleighRisk*raleighRequestO+owasaRisk*owasaRequestO+durhamRisk*durhamRequestO+.00001);
+		
+		////Make sure each utility gets at least 25% of cary capacity
+		double transferFloor = .25;
+		if(durhamRequest < transferFloor*caryExtraCapacity*durhamRequestO)
+		{
+			durhamRequest = transferFloor*caryExtraCapacity*durhamRequestO;
+			
+			owasaRequest = ((caryExtraCapacity-durhamRequest)*owasaRisk*owasaRequestO)/(raleighRisk*raleighRequestO+owasaRisk*owasaRequestO+.00001);
+			
+			raleighRequest = ((caryExtraCapacity-durhamRequest)*raleighRisk*raleighRequestO)/(raleighRisk*raleighRequestO+owasaRisk*owasaRequestO+.00001);
+			
+			if(owasaRequest < transferFloor*caryExtraCapacity*owasaRequestO)
 			{
-				durhamRequest = durhamRequestO;
-				owasaRequest = (caryExtraCapacity-durhamRequestO)*owasaRisk/(raleighRisk+owasaRisk+.00001);
-				if(owasaRequest > owasaRequestO)
-				{
-					owasaRequest = owasaRequestO;
-					raleighRequest = caryExtraCapacity - durhamRequestO - owasaRequestO;
-					if(raleighRequest > raleighRequestO)
-					{
-						raleighRequest = raleighRequestO;
-					}
-				}
-				else
-				{
-					raleighRequest = (caryExtraCapacity-durhamRequestO)*raleighRisk/(raleighRisk+owasaRisk+.00001); 
-					if(raleighRequest > raleighRequestO)
-					{
-						raleighRequest = raleighRequestO;
-						owasaRequest = caryExtraCapacity - durhamRequestO - raleighRequestO;
-						if(owasaRequest > owasaRequestO)
-						{
-							owasaRequest = owasaRequestO;
-						}
-					}
-				}
+				owasaRequest = transferFloor*caryExtraCapacity*owasaRequestO;
+				
+				raleighRequest = (caryExtraCapacity-durhamRequest-owasaRequest)*raleighRequestO;
 			}
-			else if(owasaRequest>owasaRequestO)
+			if(raleighRequest < transferFloor*caryExtraCapacity*raleighRequestO)
 			{
-				owasaRequest = owasaRequestO;
-				durhamRequest = (caryExtraCapacity - owasaRequestO)*durhamRisk/(raleighRisk+durhamRisk+.00001);
-				if(durhamRequest > durhamRequestO)
-				{
-					durhamRequest = durhamRequestO;
-					raleighRequest = caryExtraCapacity - owasaRequestO - durhamRequestO;
-					if(raleighRequest > raleighRequestO)
-					{
-						raleighRequest = raleighRequestO;
-					}
-				}
-				else
-				{
-					raleighRequest = (caryExtraCapacity - owasaRequestO)*raleighRisk/(raleighRisk+durhamRisk+.00001);
-					if(raleighRequest>raleighRequestO)
-					{
-						raleighRequest = raleighRequestO;
-						durhamRequest = caryExtraCapacity - raleighRequestO - owasaRequestO;
-						if(durhamRequest > durhamRequestO)
-						{
-							durhamRequest = durhamRequestO;
-						}
-
-					}
-				}
-			}
-			else if(raleighRequest>raleighRequestO)
-			{
-				raleighRequest = raleighRequestO;
-				durhamRequest = (caryExtraCapacity - raleighRequestO)*durhamRisk/(owasaRisk+durhamRisk+.00001);
-				if(durhamRequest>durhamRequestO)
-				{
-					durhamRequest = durhamRequestO;
-					owasaRequest = caryExtraCapacity - durhamRequestO - raleighRequestO;
-					if(owasaRequest > owasaRequestO)
-					{
-						owasaRequest = owasaRequestO;
-					}
-				}
-				else
-				{
-					owasaRequest = (caryExtraCapacity - raleighRequestO)*owasaRisk/(owasaRisk+durhamRisk+.00001);
-					if(owasaRequest>owasaRequestO)
-					{
-						owasaRequest = owasaRequestO;
-						durhamRequest = caryExtraCapacity - owasaRequestO - raleighRequestO;
-						if(durhamRequest>durhamRequestO)
-						{
-							durhamRequest = durhamRequestO;
-						}
-					}
-				}
+				raleighRequest = transferFloor*caryExtraCapacity*raleighRequestO;
+				
+				owasaRequest = (caryExtraCapacity - durhamRequest - raleighRequest)*owasaRequestO;
 			}
 		}
+		if(owasaRequest < transferFloor*caryExtraCapacity*owasaRequestO)
+		{
+			owasaRequest = transferFloor*caryExtraCapacity*owasaRequestO;
+			
+			durhamRequest = ((caryExtraCapacity-owasaRequest)*durhamRisk*durhamRequestO)/(raleighRisk*raleighRequestO+durhamRisk*durhamRequestO+.00001);
+			
+			raleighRequest = ((caryExtraCapacity-owasaRequest)*raleighRisk*raleighRequestO)/(raleighRisk*raleighRequestO+durhamRisk*durhamRequestO+.00001);
+			
+			if(durhamRequest < transferFloor*caryExtraCapacity*durhamRequestO)
+			{
+				durhamRequest = transferFloor*caryExtraCapacity*durhamRequestO;
+				
+				raleighRequest = (caryExtraCapacity-durhamRequest-owasaRequest)*raleighRequestO;
+			}
+			if(raleighRequest < transferFloor*caryExtraCapacity*raleighRequestO)
+			{
+				raleighRequest = transferFloor*caryExtraCapacity*raleighRequestO;
+				
+				durhamRequest = (caryExtraCapacity - owasaRequest - raleighRequest)*durhamRequestO;
+			}
+		}
+		if(raleighRequest < transferFloor*caryExtraCapacity*raleighRequestO)
+		{
+			raleighRequest = transferFloor*caryExtraCapacity*raleighRequestO;
+			
+			durhamRequest = ((caryExtraCapacity-raleighRequest)*durhamRisk*durhamRequestO)/(owasaRisk*owasaRequestO+durhamRisk*durhamRequestO+.00001);
+			
+			owasaRequest = ((caryExtraCapacity-raleighRequest)*owasaRisk*owasaRequestO)/(owasaRisk*owasaRequestO+durhamRisk*durhamRequestO+.00001);
+			
+			if(durhamRequest < transferFloor*caryExtraCapacity*durhamRequestO)
+			{
+				durhamRequest = transferFloor*caryExtraCapacity*durhamRequestO;
+				
+				owasaRequest = (caryExtraCapacity-durhamRequest-raleighRequest)*owasaRequestO;
+			}
+			if(owasaRequest < transferFloor*caryExtraCapacity*owasaRequestO)
+			{
+				owasaRequest = transferFloor*caryExtraCapacity*owasaRequestO;
+				
+				durhamRequest = (caryExtraCapacity - owasaRequest - raleighRequest)*durhamRequestO;
+			}
+		}
+		
 	
 		///////////Check for conveyence constraints
 		///////Raleigh capacity constraint
@@ -489,81 +490,39 @@ void ReservoirStorage::calcTransfers(double transferDurham, double durhamRisk, d
 			{
 				raleighExtra = DCCap - durhamRequest - owasaRequest;
 			}
-			if ((durhamRisk+owasaRisk)==0)
-			{
-				durhamRequest = 0;
-				owasaRequest = 0;
-			}
-			else
-			{
-				/////If Durham-Cary interconnection is limiting, available water is divided between urham & OWASA based on relative risk of failure
+			
+			/////If Durham-Cary interconnection is limiting, available water is divided between urham & OWASA based on relative risk of failure
 					
-				raleighExtraToDurham = raleighExtra*durhamRisk/(durhamRisk+owasaRisk);
-				raleighExtraToOWASA = raleighExtra*owasaRisk/(durhamRisk+owasaRisk);
-				durhamRequest += raleighExtraToDurham;
-				/////make sure neither durham or owasa get more than they asked for
-				if(durhamRequest>durhamRequestO)
-				{
-					owasaRequest +=raleighExtraToOWASA + durhamRequest - durhamRequestO;
-					durhamRequest = durhamRequestO;
-					
-					if(owasaRequest>owasaRequestO)
-					{
-						owasaRequest = owasaRequestO;
-					}
-				}
-				else
-				{
-					owasaRequest += raleighExtraToOWASA;
-					if(owasaRequest>owasaRequestO)
-					{
-						durhamRequest += owasaRequest - owasaRequestO;
-						owasaRequest = owasaRequestO;
-					}
-				}
-				/////make sure owasa doesnt take more than its connection between durham & owasa
-				if(owasaRequest>DurhamOWASACapacity)
-				{
-					durhamRequest += owasaRequest - DurhamOWASACapacity;
-					owasaRequest = DurhamOWASACapacity;
-					if(durhamRequest>durhamRequestO)
-					{
-						durhamRequest = durhamRequestO;
-					}
-				}				
+			raleighExtraToDurham = raleighExtra*durhamRisk*durhamRequestO/(durhamRisk*durhamRequestO+owasaRisk*owasaRequestO+.00001);
+				
+			raleighExtraToOWASA = raleighExtra*owasaRisk*owasaRequestO/(durhamRisk*durhamRequestO+owasaRisk*owasaRequestO+.00001);
+				
+			durhamRequest += raleighExtraToDurham;
+			owasaRequest += raleighExtraToOWASA;
+			/////make sure owasa doesnt take more than its connection between durham & owasa
+			if(owasaRequest>DurhamOWASACapacity)
+			{
+				durhamRequest += owasaRequest - DurhamOWASACapacity;
+				owasaRequest = DurhamOWASACapacity;
 			}
 		}
-		else if ((durhamRequest+owasaRequest) > DCCap)//Make sure Durham/OWASA's request does not exceed ints interconnection capacity
+		if ((durhamRequest+owasaRequest) > DCCap)//Make sure Durham/OWASA's request does not exceed ints interconnection capacity
 		{	
-			if ((durhamRisk+owasaRisk)==0.0)
-			{
-				durhamExtra = durhamRequest +owasaRequest;
-				durhamRequest = 0.0;
-				owasaRequest = 0.0;
-			}
-			else
-			{
-				/////If Durham-Cary interconnection is limiting, available water is divided between Durham & OWASA based on relative risk of failure
-				durhamExtra = durhamRequest + owasaRequest - DCCap;
-				durhamRequest = DCCap*durhamRisk/(durhamRisk+owasaRisk);
-				owasaRequest = DCCap*owasaRisk/(durhamRisk+owasaRisk);
-				if(owasaRequest>DurhamOWASACapacity)
-				{
-					durhamRequest += owasaRequest - DurhamOWASACapacity;
-					owasaRequest = DurhamOWASACapacity;
-					if(durhamRequest>durhamRequestO)
-					{
-						durhamExtra += durhamRequest - durhamRequestO;
-						durhamRequest = durhamRequestO;
-					}
-				}
-				raleighRequest += durhamExtra;
-				if (raleighRequest>RCCap)//Make sure Raleigh can take all the additional water
-				{
-					raleighRequest = RCCap;
-				}
-			}
+			/////If Durham-Cary interconnection is limiting, available water is divided between Durham & OWASA based on relative risk of failure
+			durhamExtra = durhamRequest + owasaRequest - DCCap;
+			durhamRequest = DCCap*durhamRisk*durhamRequestO/(durhamRisk*durhamRequestO+owasaRisk*owasaRequestO+.00001);
 			
+			owasaRequest = DCCap*owasaRisk*owasaRequestO/(durhamRisk*durhamRequestO+owasaRisk*owasaRequestO+.00001);
+			if(owasaRequest>DurhamOWASACapacity)
+			{
+				durhamRequest += owasaRequest - DurhamOWASACapacity;
+				owasaRequest = DurhamOWASACapacity;
+			}
+			raleighRequest += durhamExtra;
+			if (raleighRequest>RCCap)//Make sure Raleigh can take all the additional water
+			{
+				raleighRequest = RCCap;
+			}
 		}
 	}
 	durhamUse -= durhamRequest;
@@ -725,7 +684,7 @@ double ReservoirStorage::updateOWASAStorage()
 		StQStorage = StQStorage + StQInflow - 10*evap;
 		StQSpillage = 0;
 	}
-	
+	owasaExcess = 0.0;
 	//OWASA has three reservoirs, and they use water from their different reservoirs depending on storage levels
 	if ((ULStorage + ULInflow + StQSpillage - 212*evap - OWASADemand2) > .75*ULCapacity)
 	/////University Lake Inflows include Stone Quarry Spillage
@@ -736,14 +695,15 @@ double ReservoirStorage::updateOWASAStorage()
 		if (ULStorage > ULCapacity)
 		{
 			OWASASpillage += ULStorage - ULCapacity;
+			owasaExcess += ULStorage - ULCapacity;
 			ULStorage = ULCapacity;
 		}
-		
 		////No use from Cane Creek Reservoir (Cane Creek Reservoir surface area is 500 acres)
 		CCRStorage = CCRStorage +CCRInflow - 500*evap - OWASASpillage;
 		if (CCRStorage > CCRCapacity)
 		{
 			OWASASpillage += CCRStorage - CCRCapacity;
+			owasaExcess += CCRStorage - CCRCapacity;
 			CCRStorage = CCRCapacity;
 		}
 	}
@@ -756,6 +716,7 @@ double ReservoirStorage::updateOWASAStorage()
 			if (ULStorage > ULCapacity)
 			{
 				OWASASpillage += ULStorage - ULCapacity;
+				owasaExcess += ULStorage - ULCapacity;
 				ULStorage = ULCapacity;
 			}
 		
@@ -764,6 +725,7 @@ double ReservoirStorage::updateOWASAStorage()
 			if (CCRStorage > CCRCapacity)
 			{
 				OWASASpillage += CCRStorage - CCRCapacity;
+				owasaExcess += CCRStorage - CCRCapacity;
 				CCRStorage = CCRCapacity;
 			}
 		}
@@ -774,6 +736,7 @@ double ReservoirStorage::updateOWASAStorage()
 			if (ULStorage > ULCapacity)
 			{
 				OWASASpillage += ULStorage - ULCapacity;
+				owasaExcess += ULStorage - ULCapacity;
 				ULStorage = ULCapacity;
 			}
 		
@@ -781,6 +744,7 @@ double ReservoirStorage::updateOWASAStorage()
 			if (CCRStorage > CCRCapacity)
 			{
 				OWASASpillage += CCRStorage - CCRCapacity;
+				owasaExcess += CCRStorage - CCRCapacity;
 				CCRStorage = CCRCapacity;
 			}
 		}
@@ -792,6 +756,7 @@ double ReservoirStorage::updateOWASAStorage()
 		if (ULStorage > ULCapacity)
 		{
 			OWASASpillage += ULStorage - ULCapacity;
+			owasaExcess += ULStorage - ULCapacity;
 			ULStorage = ULCapacity;
 		}
 		
@@ -800,6 +765,7 @@ double ReservoirStorage::updateOWASAStorage()
 		if (CCRStorage > CCRCapacity)
 		{
 			OWASASpillage += CCRStorage - CCRCapacity;
+			owasaExcess += CCRStorage - CCRCapacity;
 			CCRStorage = CCRCapacity;
 		}
 	}
@@ -809,6 +775,7 @@ double ReservoirStorage::updateOWASAStorage()
 		if (ULStorage > ULCapacity)
 		{
 			OWASASpillage += ULStorage - ULCapacity;
+			owasaExcess += ULStorage - ULCapacity;
 			ULStorage = ULCapacity;
 		}
 		////all water use comes from Cane Creek Reservoir
@@ -816,6 +783,7 @@ double ReservoirStorage::updateOWASAStorage()
 		if (CCRStorage > CCRCapacity)
 		{
 			OWASASpillage += CCRStorage - CCRCapacity;
+			owasaExcess += CCRStorage - CCRCapacity;
 			CCRStorage = CCRCapacity;	
 		}
 	}
@@ -939,8 +907,13 @@ double ReservoirStorage::updateDurhamStorage()
 	if (durhamStorage>durhamCapacity)
 	{
 		durhamSpillage+=durhamStorage - durhamCapacity;
+		durhamExcess = durhamStorage - durhamCapacity;
 		durhamStorage=durhamCapacity;
 		//water greater than combined reservoir capacity is added to the releases for environmental flows
+	}
+	else
+	{
+		durhamExcess = 0.0;
 	}
 	
 	if (durhamStorage<0)
@@ -1213,20 +1186,26 @@ double ReservoirStorage::updateRaleighStorage(int week)
 	littleRiverRaleighStorage +=littleRiverRaleighInflow - raleighDemand3 - raleighLittleRiverSpillage + evapF*(320.0+826.0*(littleRiverRaleighStorage/(.001+littleRiverRaleighCapacity)));
 	
 	raleighQuarryStorage += raleighQuarryDiversion - evap*(20 + 30*(raleighQuarryStorage/(raleighQuarryCapacity+.001))) - raleighDemand5;
-		
+	raleighExcess = 0.0;	
 	if(lakeWBStorage>lakeWBCapacity)
 	{
 		lakeWBSpillage+=lakeWBStorage - lakeWBCapacity;
+		raleighExcess += lakeWBStorage - lakeWBCapacity;
 		lakeWBStorage = lakeWBCapacity;
 	}
 	if(littleRiverRaleighStorage>littleRiverRaleighCapacity)
 	{
 		raleighLittleRiverSpillage +=littleRiverRaleighStorage - littleRiverRaleighCapacity;
+		if(littleRiverRaleighCapacity > 100.0)
+		{
+			raleighExcess+=littleRiverRaleighStorage - littleRiverRaleighCapacity;
+		}
 		littleRiverRaleighStorage = littleRiverRaleighCapacity;
 	}
 	if (fallsLakeSupplyStorage>fallsLakeSupplyCapacity)
 	{
 		fallsSpillage+=fallsLakeSupplyStorage - fallsLakeSupplyCapacity;
+		raleighExcess += fallsLakeSupplyStorage - fallsLakeSupplyCapacity;
 		fallsLakeSupplyStorage = fallsLakeSupplyCapacity;
 	}
 	if(raleighQuarryStorage>raleighQuarryCapacity)
@@ -1346,6 +1325,7 @@ void ReservoirStorage::updateJordanLakeStorage(double owasaJordanDemand, double 
 	}
 	if(caryJordanStorage>caryJordanCapacity)
 	{
+		caryExcess = caryJordanStorage - caryJordanCapacity;
 		caryJordanStorage = caryJordanCapacity;
 	}
 }
@@ -1423,6 +1403,90 @@ double ReservoirStorage::getFallsQuality()
 {
 	return fallsLakeQualityStorage/fallsLakeQualityCapacity;
 }
+double ReservoirStorage::getExcessO()
+{
+	return owasaExcess/OWASACapacity;
+}
+double ReservoirStorage::getExcessD()
+{
+	return durhamExcess/durhamCapacity;
+}
+double ReservoirStorage::getExcessR()
+{
+	return raleighExcess/(fallsLakeSupplyCapacity+lakeWBCapacity+littleRiverRaleighCapacity);
+}
+double ReservoirStorage::getExcessC()
+{
+	return caryExcess/caryJordanCapacity;
+}
+double ReservoirStorage::getDurhamStorageVol()
+{
+	return durhamStorage;
+}
+double ReservoirStorage::getTeerStorageVol()
+{
+	return teerQuarryStorage;
+}
+double ReservoirStorage::getCCRStorageVol()
+{
+	return CCRStorage;
+}
+double ReservoirStorage::getULStorageVol()
+{
+	return ULStorage;
+}
+double ReservoirStorage::getSTQStorageVol()
+{
+	return StQStorage;
+}
+double ReservoirStorage::getOWASAStorageVol()
+{
+	return OWASAStorage;
+}
+double ReservoirStorage::getLakeWBStorageVol()
+{
+	return lakeWBStorage;
+}
+double ReservoirStorage::getFallsSupplyStorageVol()
+{
+	return fallsLakeSupplyStorage;
+}
+double ReservoirStorage::getFallsQualityStorageVol()
+{
+	return fallsLakeQualityStorage;
+}
+double ReservoirStorage::getJordanSupplyStorageVol()
+{
+	return jordanLakeSupplyStorage;
+}
+double ReservoirStorage::getJordanQualityStorageVol()
+{
+	return jordanLakeQualityStorage;
+}
+double ReservoirStorage::getCaryJordanStorageVol()
+{
+	return caryJordanStorage;
+}
+double ReservoirStorage::getRaleighJordanStorageVol()
+{
+	return raleighJordanStorage;
+}
+double ReservoirStorage::getDurhamJordanStorageVol()
+{
+	return durhamJordanStorage;
+}
+double ReservoirStorage::getOWASAJordanStorageVol()
+{
+	return owasaJordanStorage;
+}
+double ReservoirStorage::getLittleRiverRalStorageVol()
+{
+	return littleRiverRaleighStorage;
+}
+double ReservoirStorage::getRaleighQuarryStorageVol()
+{
+	return raleighQuarryStorage;
+}
 void ReservoirStorage::upgradeCaryTreatmentPlant(int counter)
 {
 	if(counter == 0)
@@ -1449,6 +1513,4 @@ void ReservoirStorage::upgradeDurhamCaryConnection()
 void ReservoirStorage::upgradeDurhamOWASAConnection()
 {
 	DurhamOWASACapacity = 16;
-	
-
 }

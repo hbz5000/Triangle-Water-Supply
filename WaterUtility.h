@@ -18,7 +18,8 @@ class WaterUtility
 	data_t FutureDemand;
 	data_t FutureBreakdown;
 	data_t usePatterns, useFractions, useFractions_Restrictions;
-	double **riskOfFailure, **probReach;
+	double riskOfFailure, probReach;
+	double *storageRisk, *riskVolume;
 	double *inflows1DIrr , *inflows1DNon, *demand1DIrr, *demand1DNon;
 	double **inflows2DIrr, **inflows2DNon, **demand2DIrr, **demand2DNon;
 	double **actualPDF;
@@ -79,7 +80,7 @@ class WaterUtility
 	vector <double> annualCosts;
 	
 	double weeklyDemand, restrictedDemand,demandDeficit, weeklyTransferVolume;
-	double ROF_res, ROF_resIns;	
+	double ROF_resIns;	
 	double insurancePremium;
 	bool shouldAllocate;
 	double infRisk, infTrigger;
@@ -104,16 +105,16 @@ class WaterUtility
 	void writeInflowDemandPDF(int InflowR, int UDr, int rows_PDF, int cols_PDF, double size1, double size2, int irrC, int nonC1, int nonC2, TimeSeriesData* Inflows);
 	void generateDemandVariation(int numWeeks, TimeSeriesData *Inflows, double demand_variation_multiplier);
 	void calculateRestrictions(int year, int week, int numdays, int month, int realization);
-	void calcTransferTriggers(int week);
     void setCapacity(double cap);
 	void addCapacity(double cap);
-	void setInsurancePayment(double dB, double inflw);
+	void setInsurancePayment(double dB, double inflw, int wk);
 	void calculateDemand(int realizations, int week, int numdays);
 	int startNewInfrastructure(int year);
 	int buildInfrastructure(int index);
 	void addDebt(int yr, int rlztn, double amt, int repayYears, double rt);
 	void addInsStorage(double add);
 	void priceInsurance(int yr, int rlztn);
+	void payForTransfers(double tC);
 	
 	//~~~~~~~~~~~~~~~~ Private class members ~~~~~~~~~~~~~~~~~~~~~~~
 	private:

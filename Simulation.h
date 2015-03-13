@@ -51,6 +51,7 @@ private:
 	ReservoirStorage systemStorage;
 	ReservoirStorage riskOfFailureStorageInf;
 	ReservoirStorage riskOfFailureStorageROF;
+	ReservoirStorage riskOfFailureStorageIP;
 
 	//for calc water price
 	double sewerFractions[12];

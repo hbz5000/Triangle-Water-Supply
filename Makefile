@@ -3,7 +3,7 @@ CC=g++
 CFLAGS=-O3 -Wall
 
 #the following is for using gprof:
-#CFLAGS=-g -c -O0
+#CFLAGS=-g -O0
 #LDFLAGS=-pg 
 
 # List of sources and objects (include all .cpp files)
@@ -19,7 +19,7 @@ all: $(SOURCES) $(TARGET)
 
 parallel: CC=mpiCC
 parallel: INCL_DIR=./Borg-1.6/
-parallel: CFLAGS += -DPARALLEL -ipo
+parallel: CFLAGS += -DPARALLEL
 parallel: all
 
 debug: CFLAGS=-O3

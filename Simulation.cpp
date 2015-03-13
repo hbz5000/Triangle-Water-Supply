@@ -691,10 +691,10 @@ void Simulation::calculation(double *c_xreal, double *c_obj, double *c_constr)
 		{
 			//xreal[i] = parameterInput[solutionNumber][i];
 		}
-		xreal[0] = 0.1;
-		xreal[1] = 0.1;
-		xreal[2] = 0.1;
-		xreal[3] = 0.1;
+		xreal[0] = 0.02;
+		xreal[1] = 0.02;
+		xreal[2] = 0.02;
+		xreal[3] = 0.02;
 		xreal[4] = 0.02;
 		xreal[5] = 0.02;
 		xreal[6] = 0.02;
@@ -706,10 +706,10 @@ void Simulation::calculation(double *c_xreal, double *c_obj, double *c_constr)
 		xreal[12] = 0.00;
 		xreal[13] = 0.00;
 		xreal[14] = 0.00;
-		xreal[15] = 0.02;
-		xreal[16] = 0.02;
-		xreal[17] = 0.02;
-		xreal[18] = 0.02;
+		xreal[15] = 0.1;
+		xreal[16] = 0.1;
+		xreal[17] = 0.1;
+		xreal[18] = 0.1;
 		xreal[19] = .0;
 		xreal[20] = .0;
 		xreal[21] = .0;
@@ -1118,9 +1118,24 @@ void Simulation::calculation(double *c_xreal, double *c_obj, double *c_constr)
 	caryUpgrades[1] = xreal[47];
 	caryUpgrades[2] = xreal[48];
 	caryUpgrades[3] = 999.0;
-	owasa.westernWakeTreatmentFrac = xreal[49];
-	durham.westernWakeTreatmentFrac = xreal[50];
-	raleigh.westernWakeTreatmentFrac = xreal[51];
+	if(xreal[49]+xreal[50]>1.0)
+	{
+		owasa.westernWakeTreatmentFrac = xreal[49];
+		durham.westernWakeTreatmentFrac = 1.0 - xreal[49];
+		raleigh.westernWakeTreatmentFrac = 0.0;
+	}
+	else if(xreal[49]+xreal[50]+xreal[51] > 1.0)
+	{
+		owasa.westernWakeTreatmentFrac = xreal[49];
+		durham.westernWakeTreatmentFrac = xreal[50];
+		raleigh.westernWakeTreatmentFrac = 1.0 - xreal[49] - xreal[50];
+	}
+	else
+	{
+		owasa.westernWakeTreatmentFrac = xreal[49];
+		durham.westernWakeTreatmentFrac = xreal[50];
+		raleigh.westernWakeTreatmentFrac = xreal[51];
+	}
 	fallsLakeReallocation = xreal[52];
 		
 	//Drought surcharges - 2 variables for each utility, one for residential customers and one for commercial/industrial/irrigation customers
@@ -1296,316 +1311,615 @@ void Simulation::createRiskOfFailure(int realization, int synthYear, double durh
 	double dROFs = 0.0;
 	double rROFs = 0.0;
 	double cROFs = 0.0;
+	double oIPs = 0.0;
+	double dIPs = 0.0;
+	double rIPs = 0.0;
+	double cIPs = 0.0;
+	double oIPex = 0.0;
+	double dIPex = 0.0;
+	double rIPex = 0.0;
+	double cIPex = 0.0;
+
 	int oROFstage = 0.0;
 	int dROFstage = 0.0;
 	int rROFstage = 0.0;
 	int cROFstage = 0.0;
 	int counter = 0;
 	int syntheticIndex = 0;
-	double thisTimeO =0.0;
-	double thisTimeR = 0.0;
-	double thisTimeD = 0.0;
-	double thisTimeC = 0.0;
+	int thisTimeO =0.0;
+	int thisTimeR = 0.0;
+	int thisTimeD = 0.0;
+	int thisTimeC = 0.0;
+	int thisTimeOIP[20];
+	int thisTimeDIP[20];
+	int thisTimeCIP[20];
+	int thisTimeRIP[20];
 	int histYear = 77;
 	int yearROF;
 	int monthROF;
 	int weekROF;
 	int numdaysROF;
 	int insurancePriceCounter;
-	for(int x = 0; x< 52; x++)
+	
+	owasa.riskOfFailure = 0.0;
+	durham.riskOfFailure = 0.0;
+	raleigh.riskOfFailure = 0.0;
+	cary.riskOfFailure = 0.0;
+	for(int x = 0; x<20; x++)
 	{
-		for(int y = 0; y < volumeIncrements; y++)
-		{
-			owasa.probReach[y][x] = 0.0;
-			durham.probReach[y][x] = 0.0;
-			raleigh.probReach[y][x] = 0.0;
-			cary.probReach[y][x] = 0.0;
-		}
+		owasa.storageRisk[x] = 0.0;
+		durham.storageRisk[x] = 0.0;
+		cary.storageRisk[x] = 0.0;
+		raleigh.storageRisk[x] = 0.0;
 	}
+			
+			
+	double durhamS = systemStorage.getDurhamStorageVol();
+	double teerS =  systemStorage.getTeerStorageVol();
+	double CCRS =  systemStorage.getCCRStorageVol();
+	double ULS =  systemStorage.getULStorageVol();
+	double STQS =  systemStorage.getSTQStorageVol();
+	double owasaS =  systemStorage.getOWASAStorageVol();
+	double lakeWBS = systemStorage.getLakeWBStorageVol();
+	double flSS =  systemStorage.getFallsSupplyStorageVol();
+	double flQS = systemStorage.getFallsQualityStorageVol();
+	double jlSS = systemStorage.getJordanSupplyStorageVol();
+	double jlQS = systemStorage.getJordanQualityStorageVol();
+	double caryJordanS = systemStorage.getCaryJordanStorageVol();
+	double raleighJordanS = systemStorage.getRaleighJordanStorageVol();
+	double durhamJordanS = systemStorage.getDurhamJordanStorageVol();
+	double owasaJordanS = systemStorage.getOWASAJordanStorageVol();
+	double littleRiverRalS = systemStorage.getLittleRiverRalStorageVol();
+	double raleighQS = systemStorage.getRaleighQuarryStorageVol();
 	
-	for (int startingWeek = 1;  startingWeek<53; startingWeek++)//determines the week of the year from which to calculate risk
+	for (int histRealizations = 0; histRealizations<histYear; histRealizations++)// determines the year of the historical streamflow record to be used in calculations
 	{
-		for (int startingVolume = 0; startingVolume<volumeIncrements; startingVolume++)// determines the storage volume from which to calculate risk
+		counter = 0;
+		thisTimeO=0;
+		thisTimeD = 0;
+		thisTimeR = 0;
+		thisTimeC = 0;
+		oIPex = 0.0;
+		dIPex = 0.0;
+		cIPex = 0.0;
+		rIPex = 0.0;
+		
+		for(int x = 0; x<20; x++)
 		{
-			owasa.riskOfFailure[startingVolume][startingWeek-1] = 0.0;
-			durham.riskOfFailure[startingVolume][startingWeek-1] = 0.0;
-			raleigh.riskOfFailure[startingVolume][startingWeek-1] = 0.0;
-			cary.riskOfFailure[startingVolume][startingWeek-1] = 0.0;
-			
-			
-
-			for (int histRealizations = 0; histRealizations<histYear; histRealizations++)// determines the year of the historical streamflow record to be used in calculations
-			{
-				counter = 0;
-				thisTimeO=0;
-				thisTimeD = 0;
-				thisTimeR = 0;
-				thisTimeC = 0;
-				riskOfFailureDates.initializeDates(4,1,startingWeek,7,0);//each simulation is run independently (52 week intervals, then the slate is cleaned)
-				riskOfFailureStorageROF.updateReservoirStorageROF( double(startingVolume), double(volumeIncrements));
-										
-					
-				while (counter<52)
-				{	
-					//Retrieving date information
-					yearROF = riskOfFailureDates.getYear();
-					monthROF = riskOfFailureDates.getMonth();
-					weekROF = riskOfFailureDates.getWeek();
-					numdaysROF = riskOfFailureDates.getDays();
-						
-					//Demand calcs
-					//While seasonal trends and future growth are incorporated, no demand uncertainty is used (weekly averages only)
-					durhamROFDemand = durham.UD.averages[weekROF-1]*numdays*durhamDemandValue;//Durham demands
-					owasaROFDemand = owasa.UD.averages[weekROF-1]*numdays*owasaDemandValue;//OWASA demands
-					raleighROFDemand = raleigh.UD.averages[weekROF-1]*numdays*raleighDemandValue;//Raleigh Demands
-					caryROFDemand = raleigh.UD.averages[weekROF-1]*numdays*caryDemandValue;//Raleigh Demands
-					
-					riskOfFailureStorageROF.setDemands(durhamROFDemand, owasaROFDemand, raleighROFDemand, caryROFDemand, numdaysROF);//passes demands to storage calcs
-					
-					//Inflow Calcs
-					durhamROFInflow = michieInflow[weekROF-1][histRealizations+yearROF]+littleRiverInflow[weekROF-1][histRealizations+yearROF-3];//Durham Inflows
-					raleighROFInflow = fallsLakeInflow[histRealizations+yearROF-3][weekROF-1];//Raleigh
-					owasaROFInflow = owasaInflow[weekROF-1][histRealizations+yearROF];//OWASA
-					wbROFInflow = lakeWBInflow[histRealizations+yearROF-2][weekROF-1];//Wheeler&Benson
-					claytonROFInflow = claytonInflow[histRealizations+yearROF-2][weekROF-1];//Clayton gauge
-					crabtreeROFInflow = crabtreeInflow[histRealizations+yearROF-2][weekROF-1];// Crabtree creek
-					jordanROFInflow = jordanLakeInflow[histRealizations+yearROF-4][weekROF-1];
-					lillingtonROFInflow = lillingtonGaugeInflow[histRealizations+yearROF-4][weekROF-1];
-					littleRiverRaleighROFInflow = littleRiverRaleighInflow[histRealizations+yearROF-3][weekROF-1];
-					//Evap Calcs
-					ROFevap = evaporation[weekROF-1][histRealizations+yearROF-4];//Durham and OWASA evap
-					fallsROFevap = fallsLakeEvaporation[histRealizations+yearROF-3][weekROF-1];// Falls Lake evap
-					wbROFevap= lakeWheelerEvaporation[histRealizations+yearROF-4][weekROF-1];//Wheeler Benson evap
-
-					riskOfFailureStorageROF.setInflow(durhamROFInflow, //passes inflows to storage calcs
-						31.4*owasaROFInflow,
-						28.7*owasaROFInflow, 
-						1.2*owasaROFInflow, 
-						raleighROFInflow, 
-						wbROFInflow, 
-						claytonROFInflow, 
-						crabtreeROFInflow, jordanROFInflow, lillingtonROFInflow, 
-						raleighROFDemand*returnRatio[1][weekROF-1], 
-						durhamROFDemand*returnRatio[0][weekROF-1], durhamROFDemand*returnRatio[0][weekROF-1],owasaROFDemand*returnRatio[0][weekROF-1],
-						fallsROFevap, 
-						wbROFevap, 
-						ROFevap, littleRiverRaleighROFInflow);
-					riskOfFailureStorageROF.setSpillover(weekROF-1);//reservoir releases to meet downstream needs and/or reservoir capacity
-					riskOfFailureStorageROF.updateStorage(weekROF-1);//storage calcs
-					
-					oROFs = riskOfFailureStorageROF.getOWASAStorage();//retrieve overall storage, OWASA
-					dROFs = riskOfFailureStorageROF.getDurhamStorage();//retrieve overall storage, Durham
-					rROFs = riskOfFailureStorageROF.getRaleighStorage();//retrieve overall storage, Raleigh
-					cROFs = riskOfFailureStorageROF.getCaryStorage();
-					if(startingWeek == 13&&startingVolume == volumeIncrements - 1)
-					{
-						insurancePriceCounter = startingWeek - 1 + counter;
-						if(insurancePriceCounter > 51)
-						{
-							insurancePriceCounter -= 52;
-						}
-						oROFstage = int(oROFs*volumeIncrements);
-						dROFstage = int(dROFs*volumeIncrements);
-						rROFstage = int(rROFs*volumeIncrements);
-						cROFstage = int(cROFs*volumeIncrements);
-						for(int currentInc = oROFstage; currentInc<volumeIncrements; currentInc++)
-						{
-							owasa.probReach[currentInc][insurancePriceCounter] += 1.0/(double(histYear+synthYear));
-						}
-						for(int currentInc = dROFstage; currentInc<volumeIncrements; currentInc++)
-						{
-							durham.probReach[currentInc][insurancePriceCounter] += 1.0/(double(histYear+synthYear));
-						}
-						for(int currentInc = rROFstage; currentInc<volumeIncrements; currentInc++)
-						{
-							raleigh.probReach[currentInc][insurancePriceCounter] += 1.0/(double(histYear+synthYear));
-						}
-						for(int currentInc = cROFstage; currentInc<volumeIncrements; currentInc++)
-						{
-							cary.probReach[currentInc][insurancePriceCounter] += 1.0/(double(histYear+synthYear));
-						}
-					}
-					if (oROFs<.2)
-					{
-						thisTimeO = 1;//Mark OWASA failure (not a count, there is no difference between 1 week of failure and 52)
-					}
-					if (dROFs<.2)
-					{
-						thisTimeD = 1;//Mark Durham failure (not a count, there is no difference between 1 week of failure and 52)
-					}
-					if (rROFs<.2)
-					{
-						thisTimeR = 1;//Mark Raleigh failure (not a count, there is no difference between 1 week of failure and 52)
-					}
-					if (cROFs<.2)
-					{
-						thisTimeC = 1;
-					}
-					riskOfFailureDates.increase();//increase week by one
-					counter++;
-				}
-					
-				if (thisTimeO==1)//Fill out the risk matricies (every historical year that causes at least one week of failure results in an increase in risk of 1.28% (1/78)
-				{
-					owasa.riskOfFailure[startingVolume][startingWeek-1]+= 1.0;
-				}
-				if (thisTimeD==1)
-				{
-					durham.riskOfFailure[startingVolume][startingWeek-1]+= 1.0;
-				}
-				if (thisTimeR==1)
-				{
-					raleigh.riskOfFailure[startingVolume][startingWeek-1]+= 1.0;
-				}
-				if (thisTimeC==1)
-				{
-					cary.riskOfFailure[startingVolume][startingWeek-1]+= 1.0;
-				}
-			}
-			for (int synthRealizations = 3; synthRealizations<synthYear; synthRealizations++)// determines the year of the historical streamflow record to be used in calculations
-			{
-				counter = 0;
-				thisTimeO=0;
-				thisTimeD = 0;
-				thisTimeR = 0;
-				thisTimeC = 0;
-				riskOfFailureDates.initializeDates(1,1,startingWeek,7,0);//each simulation is run independently (52 week intervals, then the slate is cleaned)
-				riskOfFailureStorageROF.updateReservoirStorageROF( double(startingVolume), double(volumeIncrements));
-										
-					
-				while (counter<52)
-				{	
-					//Retrieving date information
-					yearROF = riskOfFailureDates.getYear();
-					monthROF = riskOfFailureDates.getMonth();
-					weekROF = riskOfFailureDates.getWeek();
-					numdaysROF = riskOfFailureDates.getDays();
-						
-					//Demand calcs
-					//While seasonal trends and future growth are incorporated, no demand uncertainty is used (weekly averages only)
-					durhamROFDemand = durham.UD.averages[weekROF-1]*numdays*durhamDemandValue;//Durham demands
-					owasaROFDemand = owasa.UD.averages[weekROF-1]*numdays*owasaDemandValue;//OWASA demands
-					raleighROFDemand = raleigh.UD.averages[weekROF-1]*numdays*raleighDemandValue;//Raleigh Demands
-					caryROFDemand = raleigh.UD.averages[weekROF-1]*numdays*caryDemandValue;//Raleigh Demands
+			thisTimeOIP[x] = 0;
+			thisTimeDIP[x] = 0;
+			thisTimeRIP[x] = 0;
+			thisTimeCIP[x] = 0;
+		}
+		riskOfFailureDates.initializeDates(4,1,week,7,0);//each simulation is run independently (52 week intervals, then the slate is cleaned)
 	
-					riskOfFailureStorageROF.setDemands(durhamROFDemand, owasaROFDemand, raleighROFDemand, caryROFDemand, numdaysROF);//passes demands to storage calcs
+		riskOfFailureStorageROF.updateReservoirStorageROF(durhamS, teerS, CCRS, ULS, STQS, owasaS, lakeWBS, flSS, flQS, jlSS, jlQS, caryJordanS,  raleighJordanS,  durhamJordanS, owasaJordanS, littleRiverRalS, raleighQS);
+		riskOfFailureStorageIP.updateReservoirStorageROF();
+		
+		while (counter<52)
+		{	
+			//Retrieving date information
+			yearROF = riskOfFailureDates.getYear();
+			monthROF = riskOfFailureDates.getMonth();
+			weekROF = riskOfFailureDates.getWeek();
+			numdaysROF = riskOfFailureDates.getDays();
+						
+			//Demand calcs
+			//While seasonal trends and future growth are incorporated, no demand uncertainty is used (weekly averages only)
+			durhamROFDemand = durham.UD.averages[weekROF-1]*numdays*durhamDemandValue;//Durham demands
+			owasaROFDemand = owasa.UD.averages[weekROF-1]*numdays*owasaDemandValue;//OWASA demands
+			raleighROFDemand = raleigh.UD.averages[weekROF-1]*numdays*raleighDemandValue;//Raleigh Demands
+			caryROFDemand = raleigh.UD.averages[weekROF-1]*numdays*caryDemandValue;//Raleigh Demands
 					
-					//Inflow Calcs
-					syntheticIndex = (yearROF-1+synthRealizations)*52+weekROF-1;
-					durhamROFInflow = durhamInflows.synthetic[realization][syntheticIndex];//Durham Inflows
-					raleighROFInflow = owasaInflows.synthetic[realization][syntheticIndex];//Raleigh
-					owasaROFInflow = fallsInflows.synthetic[realization][syntheticIndex];//OWASA
-					wbROFInflow = wheelerInflows.synthetic[realization][syntheticIndex];//Wheeler&Benson
-					claytonROFInflow = claytonInflows.synthetic[realization][syntheticIndex];//Clayton gauge
-					crabtreeROFInflow = crabtreeInflows.synthetic[realization][syntheticIndex];// Crabtree creek
-					jordanROFInflow = jordanInflows.synthetic[realization][syntheticIndex];
-					lillingtonROFInflow = lillingtonInflows.synthetic[realization][syntheticIndex];
-					littleRiverRaleighROFInflow = littleRiverRaleighInflows.synthetic[realization][syntheticIndex];
+			riskOfFailureStorageROF.setDemands(durhamROFDemand, owasaROFDemand, raleighROFDemand, caryROFDemand, numdaysROF);//passes demands to storage calcs
+			
+			riskOfFailureStorageIP.setDemands(durhamROFDemand, owasaROFDemand, raleighROFDemand, caryROFDemand, numdaysROF);//passes demands to storage calcs
+					
+			//Inflow Calcs
+			durhamROFInflow = michieInflow[weekROF-1][histRealizations+yearROF]+littleRiverInflow[weekROF-1][histRealizations+yearROF-3];//Durham Inflows
+			raleighROFInflow = fallsLakeInflow[histRealizations+yearROF-3][weekROF-1];//Raleigh
+			owasaROFInflow = owasaInflow[weekROF-1][histRealizations+yearROF];//OWASA
+			wbROFInflow = lakeWBInflow[histRealizations+yearROF-2][weekROF-1];//Wheeler&Benson
+			claytonROFInflow = claytonInflow[histRealizations+yearROF-2][weekROF-1];//Clayton gauge
+			crabtreeROFInflow = crabtreeInflow[histRealizations+yearROF-2][weekROF-1];// Crabtree creek
+			jordanROFInflow = jordanLakeInflow[histRealizations+yearROF-4][weekROF-1];
+			lillingtonROFInflow = lillingtonGaugeInflow[histRealizations+yearROF-4][weekROF-1];
+			littleRiverRaleighROFInflow = littleRiverRaleighInflow[histRealizations+yearROF-3][weekROF-1];
 					//Evap Calcs
-					ROFevap = evaporation[weekROF-1][synthRealizations];//Durham and OWASA evap
-					fallsROFevap = fallsLakeEvaporation[synthRealizations][weekROF-1];// Falls Lake evap
-					wbROFevap= lakeWheelerEvaporation[synthRealizations][weekROF-1];//Wheeler Benson evap
-					
-					riskOfFailureStorageROF.setInflow(durhamROFInflow, //passes inflows to storage calcs
-						31.4*owasaROFInflow,
-						28.7*owasaROFInflow, 
-						1.2*owasaROFInflow, 
-						raleighROFInflow, 
-						wbROFInflow, 
-						claytonROFInflow, 
-						crabtreeROFInflow, jordanROFInflow, lillingtonROFInflow, 
-						raleighROFDemand*returnRatio[1][weekROF-1], 
-						durhamROFDemand*returnRatio[0][weekROF-1], durhamROFDemand*returnRatio[0][weekROF-1],owasaROFDemand*returnRatio[0][weekROF-1],
-						fallsROFevap, 
-						wbROFevap, 
-						ROFevap, littleRiverRaleighROFInflow);
-					riskOfFailureStorageROF.setSpillover(week-1);//reservoir releases to meet downstream needs and/or reservoir capacity
-					riskOfFailureStorageROF.updateStorage(week-1);//storage calcs
-					
-					oROFs = riskOfFailureStorageROF.getOWASAStorage();//retrieve overall storage, OWASA
-					dROFs = riskOfFailureStorageROF.getDurhamStorage();//retrieve overall storage, Durham
-					rROFs = riskOfFailureStorageROF.getRaleighStorage();//retrieve overall storage, Raleigh
-					cROFs = riskOfFailureStorageROF.getCaryStorage();
-					if(startingWeek == 13&&startingVolume == volumeIncrements - 1)
-					{
-						insurancePriceCounter = startingWeek - 1 + counter;
-						if(insurancePriceCounter > 51)
-						{
-							insurancePriceCounter -= 52;
-						}
-						oROFstage = int(oROFs*volumeIncrements);
-						dROFstage = int(dROFs*volumeIncrements);
-						rROFstage = int(rROFs*volumeIncrements);
-						cROFstage = int(cROFs*volumeIncrements);
-						for(int currentInc = oROFstage; currentInc<volumeIncrements; currentInc++)
-						{
-							owasa.probReach[currentInc][insurancePriceCounter] += 1.0/(double(histYear+synthYear));
-						}
-						for(int currentInc = dROFstage; currentInc<volumeIncrements; currentInc++)
-						{
-							durham.probReach[currentInc][insurancePriceCounter] += 1.0/(double(histYear+synthYear));
-						}
-						for(int currentInc = rROFstage; currentInc<volumeIncrements; currentInc++)
-						{
-							raleigh.probReach[currentInc][insurancePriceCounter] += 1.0/(double(histYear+synthYear));
-						}
-						for(int currentInc = cROFstage; currentInc<volumeIncrements; currentInc++)
-						{
-							cary.probReach[currentInc][insurancePriceCounter] += 1.0/(double(histYear+synthYear));
-						}
-					}
-							
-					if (oROFs<.2)
-					{
-						thisTimeO = 1;//Mark OWASA failure (not a count, there is no difference between 1 week of failure and 52)
-					}
-					if (dROFs<.2)
-					{
-						thisTimeD = 1;//Mark Durham failure (not a count, there is no difference between 1 week of failure and 52)
-					}
-					if (rROFs<.2)
-					{
-						thisTimeR = 1;//Mark Raleigh failure (not a count, there is no difference between 1 week of failure and 52)
-					}
-					if (cROFs<.2)
-					{
-						thisTimeC = 1;
-					}
-					riskOfFailureDates.increase();//increase week by one
-					counter++;
-				}
-				if (thisTimeO==1)//Fill out the risk matricies (every historical year that causes at least one week of failure results in an increase in risk of 1.28% (1/78)
-				{
-					owasa.riskOfFailure[startingVolume][startingWeek-1]+= 1.0;
-				}
-				if (thisTimeD==1)
-				{
-					durham.riskOfFailure[startingVolume][startingWeek-1]+= 1.0;
-				}
-				if (thisTimeR==1)
-				{
-					raleigh.riskOfFailure[startingVolume][startingWeek-1]+= 1.0;
-				}
-				if (thisTimeC==1)
-				{
-					cary.riskOfFailure[startingVolume][startingWeek-1]+= 1.0;
-				}
+			ROFevap = evaporation[weekROF-1][histRealizations+yearROF-4];//Durham and OWASA evap
+			fallsROFevap = fallsLakeEvaporation[histRealizations+yearROF-3][weekROF-1];// Falls Lake evap
+			wbROFevap= lakeWheelerEvaporation[histRealizations+yearROF-4][weekROF-1];//Wheeler Benson evap
+
+			riskOfFailureStorageROF.setInflow(durhamROFInflow, //passes inflows to storage calcs
+				31.4*owasaROFInflow,
+				28.7*owasaROFInflow, 
+				1.2*owasaROFInflow, 
+				raleighROFInflow, 
+				wbROFInflow, 
+				claytonROFInflow, 
+				crabtreeROFInflow, jordanROFInflow, lillingtonROFInflow, 
+				raleighROFDemand*returnRatio[1][weekROF-1], 
+				durhamROFDemand*returnRatio[0][weekROF-1], durhamROFDemand*returnRatio[0][weekROF-1],owasaROFDemand*returnRatio[0][weekROF-1],
+				fallsROFevap, 
+				wbROFevap, 
+				ROFevap, littleRiverRaleighROFInflow);
 				
-			}
-			owasa.riskOfFailure[startingVolume][startingWeek-1] = owasa.riskOfFailure[startingVolume][startingWeek-1]/(double(histYear+synthYear));
+			riskOfFailureStorageIP.setInflow(durhamROFInflow, //passes inflows to storage calcs
+				31.4*owasaROFInflow,
+				28.7*owasaROFInflow, 
+				1.2*owasaROFInflow, 
+				raleighROFInflow, 
+				wbROFInflow, 
+				claytonROFInflow, 
+				crabtreeROFInflow, jordanROFInflow, lillingtonROFInflow, 
+				raleighROFDemand*returnRatio[1][weekROF-1], 
+				durhamROFDemand*returnRatio[0][weekROF-1], durhamROFDemand*returnRatio[0][weekROF-1],owasaROFDemand*returnRatio[0][weekROF-1],
+				fallsROFevap, 
+				wbROFevap, 
+				ROFevap, littleRiverRaleighROFInflow);
 			
-			
-			durham.riskOfFailure[startingVolume][startingWeek-1] = durham.riskOfFailure[startingVolume][startingWeek-1]/(double(histYear+synthYear));
+			riskOfFailureStorageROF.setSpillover(weekROF-1);//reservoir releases to meet downstream needs and/or reservoir capacity
+			riskOfFailureStorageIP.setSpillover(weekROF-1);//reservoir releases to meet downstream needs and/or reservoir capacity
 
-			raleigh.riskOfFailure[startingVolume][startingWeek-1] = raleigh.riskOfFailure[startingVolume][startingWeek-1]/(double(histYear+synthYear));
+			riskOfFailureStorageROF.updateStorage(weekROF-1);//storage calcs
+			riskOfFailureStorageIP.updateStorage(weekROF-1);//storage calcs		
 			
-			cary.riskOfFailure[startingVolume][startingWeek-1] = cary.riskOfFailure[startingVolume][startingWeek-1]/(double(histYear+synthYear));
+			oROFs = riskOfFailureStorageROF.getOWASAStorage();//retrieve overall storage, OWASA
+			dROFs = riskOfFailureStorageROF.getDurhamStorage();//retrieve overall storage, Durham
+			rROFs = riskOfFailureStorageROF.getRaleighStorage();//retrieve overall storage, Raleigh
+			cROFs = riskOfFailureStorageROF.getCaryStorage();
+
+			if (oROFs<.2)
+			{
+				thisTimeO = 1;//Mark OWASA failure (not a count, there is no difference between 1 week of failure and 52)
+			}
+			if (dROFs<.2)
+			{
+				thisTimeD = 1;//Mark Durham failure (not a count, there is no difference between 1 week of failure and 52)
+			}
+			if (rROFs<.2)
+			{
+				thisTimeR = 1;//Mark Raleigh failure (not a count, there is no difference between 1 week of failure and 52)
+			}
+			if (cROFs<.2)
+			{
+				thisTimeC = 1;
+			}
 			
+			riskOfFailureDates.increase();//increase week by one
+			counter++;
+			oIPs = riskOfFailureStorageIP.getOWASAStorage();//retrieve overall storage, OWASA
+			dIPs = riskOfFailureStorageIP.getDurhamStorage();//retrieve overall storage, Durham
+			rIPs = riskOfFailureStorageIP.getRaleighStorage();//retrieve overall storage, Raleigh
+			cIPs = riskOfFailureStorageIP.getCaryStorage();
+
+			oIPex += riskOfFailureStorageIP.getExcessO();//retrieve overall storage, OWASA
+			dIPex += riskOfFailureStorageIP.getExcessD();//retrieve overall storage, Durham
+			rIPex += riskOfFailureStorageIP.getExcessR();//retrieve overall storage, Raleigh
+			cIPex += riskOfFailureStorageIP.getExcessC();
+			
+			if(oIPs<0.2)
+			{
+				for(int x = 0; x< 20; x++)
+				{
+					thisTimeOIP[x] = 1;
+				}
+			}
+			else
+			{
+				for(int x = 0; x<20; x++)
+				{
+					if(oIPs<(0.2+double(x)/20.0 - oIPex))
+					{
+						for(int y = x; y<20; y++)
+						{
+							thisTimeOIP[y] = 1;
+						}
+						break;
+					}
+				}
+			}
+			
+			if(dIPs<0.2)
+			{
+				for(int x = 0; x< 20; x++)
+				{
+					thisTimeDIP[x] = 1;
+				}
+			}
+			else
+			{
+				for(int x = 0; x<20; x++)
+				{
+					if(dIPs<(0.2+double(x)/20.0 - dIPex))
+					{
+						for(int y = x; y<20; y++)
+						{
+							thisTimeDIP[y] = 1;
+						}
+						break;
+					}
+				}
+			}
+			
+			if(rIPs<0.2)
+			{
+				for(int x = 0; x< 20; x++)
+				{
+					thisTimeRIP[x] = 1;
+				}
+			}
+			else
+			{
+				for(int x = 0; x<20; x++)
+				{
+					if(rIPs<(0.2+double(x)/20.0 - rIPex))
+					{
+						for(int y = x; y<20; y++)
+						{
+							thisTimeRIP[y] = 1;
+						}
+						break;
+					}
+				}
+			}
+			
+			if(cIPs<0.2)
+			{
+				for(int x = 0; x< 20; x++)
+				{
+					thisTimeCIP[x] = 1;
+				}
+			}
+			else
+			{
+				for(int x = 0; x<20; x++)
+				{
+					if(cIPs<(0.2+double(x)/20.0 - cIPex))
+					{
+						for(int y = x; y<20; y++)
+						{
+							thisTimeCIP[y] = 1;
+						}
+						break;
+					}
+				}
+			}
+		}
+		
+		if (thisTimeO==1)//Fill out the risk matricies (every historical year that causes at least one week of failure results in an increase in risk of 1.28% (1/78)
+		{
+			owasa.riskOfFailure += 1.0;
+		}
+		if (thisTimeD==1)
+		{
+			durham.riskOfFailure += 1.0;
+		}
+		if (thisTimeR==1)
+		{
+			raleigh.riskOfFailure += 1.0;
+		}
+		if (thisTimeC==1)
+		{
+			cary.riskOfFailure += 1.0;
+		}
+		for (int x = 0; x<20; x++)
+		{
+			if(thisTimeOIP[x] == 1)
+			{
+				owasa.storageRisk[x] += 1.0;
+			}
+			if(thisTimeDIP[x] == 1)
+			{
+				durham.storageRisk[x] += 1.0;
+			}
+			if(thisTimeRIP[x] == 1)
+			{
+				raleigh.storageRisk[x] += 1.0;
+			}
+			if(thisTimeCIP[x] == 1)
+			{
+				cary.storageRisk[x] += 1.0;
+			}
 		}
 	}
-return;
-}
+	for (int synthRealizations = 3; synthRealizations<synthYear; synthRealizations++)// determines the year of the historical streamflow record to be used in calculations
+	{
+		counter = 0;
+		thisTimeO=0;
+		thisTimeD = 0;
+		thisTimeR = 0;
+		thisTimeC = 0;
+		oIPex = 0.0;
+		dIPex = 0.0;
+		cIPex = 0.0;
+		rIPex = 0.0;
+		for(int x = 0; x<20; x++)
+		{
+			thisTimeOIP[x] = 0;
+			thisTimeDIP[x] = 0;
+			thisTimeRIP[x] = 0;
+			thisTimeCIP[x] = 0;
+		}
+		riskOfFailureDates.initializeDates(4,1,week,7,0);//each simulation is run independently (52 week intervals, then the slate is cleaned)
+	
+		riskOfFailureStorageROF.updateReservoirStorageROF(durhamS, teerS, CCRS, ULS, STQS, owasaS, lakeWBS, flSS, flQS, jlSS, jlQS, caryJordanS,  raleighJordanS,  durhamJordanS, owasaJordanS, littleRiverRalS, raleighQS);
+		riskOfFailureStorageIP.updateReservoirStorageROF();
+												
+					
+		while (counter<52)
+		{	
+			//Retrieving date information
+			yearROF = riskOfFailureDates.getYear();
+			monthROF = riskOfFailureDates.getMonth();
+			weekROF = riskOfFailureDates.getWeek();
+			numdaysROF = riskOfFailureDates.getDays();
+						
+			//Demand calcs
+			//While seasonal trends and future growth are incorporated, no demand uncertainty is used (weekly averages only)
+			durhamROFDemand = durham.UD.averages[weekROF-1]*numdays*durhamDemandValue;//Durham demands
+			owasaROFDemand = owasa.UD.averages[weekROF-1]*numdays*owasaDemandValue;//OWASA demands
+			raleighROFDemand = raleigh.UD.averages[weekROF-1]*numdays*raleighDemandValue;//Raleigh Demands
+			caryROFDemand = raleigh.UD.averages[weekROF-1]*numdays*caryDemandValue;//Raleigh Demands
+	
+			riskOfFailureStorageROF.setDemands(durhamROFDemand, owasaROFDemand, raleighROFDemand, caryROFDemand, numdaysROF);//passes demands to storage calcs
+			riskOfFailureStorageIP.setDemands(durhamROFDemand, owasaROFDemand, raleighROFDemand, caryROFDemand, numdaysROF);//passes demands to storage calcs
+					
+			//Inflow Calcs
+			syntheticIndex = (yearROF-1+synthRealizations)*52+weekROF-1;
+			durhamROFInflow = durhamInflows.synthetic[realization][syntheticIndex];//Durham Inflows
+			raleighROFInflow = owasaInflows.synthetic[realization][syntheticIndex];//Raleigh
+			owasaROFInflow = fallsInflows.synthetic[realization][syntheticIndex];//OWASA
+			wbROFInflow = wheelerInflows.synthetic[realization][syntheticIndex];//Wheeler&Benson
+			claytonROFInflow = claytonInflows.synthetic[realization][syntheticIndex];//Clayton gauge
+			crabtreeROFInflow = crabtreeInflows.synthetic[realization][syntheticIndex];// Crabtree creek
+			jordanROFInflow = jordanInflows.synthetic[realization][syntheticIndex];
+			lillingtonROFInflow = lillingtonInflows.synthetic[realization][syntheticIndex];
+			littleRiverRaleighROFInflow = littleRiverRaleighInflows.synthetic[realization][syntheticIndex];
+			//Evap Calcs
+			ROFevap = evaporation[weekROF-1][synthRealizations];//Durham and OWASA evap
+			fallsROFevap = fallsLakeEvaporation[synthRealizations][weekROF-1];// Falls Lake evap
+			wbROFevap= lakeWheelerEvaporation[synthRealizations][weekROF-1];//Wheeler Benson evap
+					
+			riskOfFailureStorageROF.setInflow(durhamROFInflow, //passes inflows to storage calcs
+				31.4*owasaROFInflow,
+				28.7*owasaROFInflow, 
+				1.2*owasaROFInflow, 
+				raleighROFInflow, 
+				wbROFInflow, 
+				claytonROFInflow, 
+				crabtreeROFInflow, jordanROFInflow, lillingtonROFInflow, 
+				raleighROFDemand*returnRatio[1][weekROF-1], 
+				durhamROFDemand*returnRatio[0][weekROF-1], durhamROFDemand*returnRatio[0][weekROF-1],owasaROFDemand*returnRatio[0][weekROF-1],
+				fallsROFevap, 
+				wbROFevap, 
+				ROFevap, littleRiverRaleighROFInflow);
+				
+			riskOfFailureStorageIP.setInflow(durhamROFInflow, //passes inflows to storage calcs
+				31.4*owasaROFInflow,
+				28.7*owasaROFInflow, 
+				1.2*owasaROFInflow, 
+				raleighROFInflow, 
+				wbROFInflow, 
+				claytonROFInflow, 
+				crabtreeROFInflow, jordanROFInflow, lillingtonROFInflow, 
+				raleighROFDemand*returnRatio[1][weekROF-1], 
+				durhamROFDemand*returnRatio[0][weekROF-1], durhamROFDemand*returnRatio[0][weekROF-1],owasaROFDemand*returnRatio[0][weekROF-1],
+				fallsROFevap, 
+				wbROFevap, 
+				ROFevap, littleRiverRaleighROFInflow);
+			
+			riskOfFailureStorageROF.setSpillover(week-1);//reservoir releases to meet downstream needs and/or reservoir capacity
+			riskOfFailureStorageIP.setSpillover(week-1);//reservoir releases to meet downstream needs and/or reservoir capacity
+			
+			riskOfFailureStorageROF.updateStorage(week-1);//storage calcs
+			riskOfFailureStorageIP.updateStorage(week-1);//storage calcs
+			
+			oROFs = riskOfFailureStorageROF.getOWASAStorage();//retrieve overall storage, OWASA
+			dROFs = riskOfFailureStorageROF.getDurhamStorage();//retrieve overall storage, Durham
+			rROFs = riskOfFailureStorageROF.getRaleighStorage();//retrieve overall storage, Raleigh
+			cROFs = riskOfFailureStorageROF.getCaryStorage();	
 
+			if (oROFs<.2)
+			{
+				thisTimeO = 1;//Mark OWASA failure (not a count, there is no difference between 1 week of failure and 52)
+			}
+			if (dROFs<.2)
+			{
+				thisTimeD = 1;//Mark Durham failure (not a count, there is no difference between 1 week of failure and 52)
+			}
+			if (rROFs<.2)
+			{
+				thisTimeR = 1;//Mark Raleigh failure (not a count, there is no difference between 1 week of failure and 52)
+			}
+			if (cROFs<.2)
+			{
+				thisTimeC = 1;
+			}
+			riskOfFailureDates.increase();//increase week by one
+			counter++;
+		
+			oIPs = riskOfFailureStorageIP.getOWASAStorage();//retrieve overall storage, OWASA
+			dIPs = riskOfFailureStorageIP.getDurhamStorage();//retrieve overall storage, Durham
+			rIPs = riskOfFailureStorageIP.getRaleighStorage();//retrieve overall storage, Raleigh
+			cIPs = riskOfFailureStorageIP.getCaryStorage();
+
+			oIPex += riskOfFailureStorageIP.getExcessO();//retrieve overall storage, OWASA
+			dIPex += riskOfFailureStorageIP.getExcessD();//retrieve overall storage, Durham
+			rIPex += riskOfFailureStorageIP.getExcessR();//retrieve overall storage, Raleigh
+			cIPex += riskOfFailureStorageIP.getExcessC();
+			
+			if(oIPs<0.2)
+			{
+				for(int x = 0; x< 20; x++)
+				{
+					thisTimeOIP[x] = 1;
+				}
+			}
+			else
+			{
+				for(int x = 0; x<20; x++)
+				{
+					if(oIPs<(0.2+double(x)/20.0 - oIPex))
+					{
+						for(int y = x; y<20; y++)
+						{
+							thisTimeOIP[y] = 1;
+						}
+						break;
+					}
+				}
+			}
+			
+			if(dIPs<0.2)
+			{
+				for(int x = 0; x< 20; x++)
+				{
+					thisTimeDIP[x] = 1;
+				}
+			}
+			else
+			{
+				for(int x = 0; x<20; x++)
+				{
+					if(dIPs<(0.2+double(x)/20.0 - dIPex))
+					{
+						for(int y = x; y<20; y++)
+						{
+							thisTimeDIP[y] = 1;
+						}
+						break;
+					}
+				}
+			}
+			
+			if(rIPs<0.2)
+			{
+				for(int x = 0; x< 20; x++)
+				{
+					thisTimeRIP[x] = 1;
+				}
+			}
+			else
+			{
+				for(int x = 0; x<20; x++)
+				{
+					if(rIPs<(0.2+double(x)/20.0 - rIPex))
+					{
+						for(int y = x; y<20; y++)
+						{
+							thisTimeRIP[y] = 1;
+						}
+						break;
+					}
+				}
+			}
+			
+			if(cIPs<0.2)
+			{
+				for(int x = 0; x< 20; x++)
+				{
+					thisTimeCIP[x] = 1;
+				}
+			}
+			else
+			{
+				for(int x = 0; x<20; x++)
+				{
+					if(cIPs<(0.2+double(x)/20.0 - cIPex))
+					{
+						for(int y = x; y<20; y++)
+						{
+							thisTimeCIP[y] = 1;
+						}
+						break;
+					}
+				}
+			}
+		}
+					
+		if (thisTimeO==1)//Fill out the risk matricies (every historical year that causes at least one week of failure results in an increase in risk of 1.28% (1/78)
+		{
+			owasa.riskOfFailure += 1.0;
+		}
+		if (thisTimeD==1)
+		{
+			durham.riskOfFailure += 1.0;
+		}
+		if (thisTimeR==1)
+		{
+			raleigh.riskOfFailure += 1.0;
+		}
+		if (thisTimeC==1)
+		{
+			cary.riskOfFailure += 1.0;
+		}
+		for (int x = 0; x<20; x++)
+		{
+			if(thisTimeOIP[x] == 1)
+			{
+				owasa.storageRisk[x] += 1.0;
+			}
+			if(thisTimeDIP[x] == 1)
+			{
+				durham.storageRisk[x] += 1.0;
+			}
+			
+			if(thisTimeRIP[x] == 1)
+			{
+				raleigh.storageRisk[x] += 1.0;
+			}
+			if(thisTimeCIP[x] == 1)
+			{
+				cary.storageRisk[x] += 1.0;
+			}
+		}
+	}
+	owasa.riskOfFailure = owasa.riskOfFailure/(double(histYear+synthYear));
+	durham.riskOfFailure = durham.riskOfFailure/(double(histYear+synthYear));
+	raleigh.riskOfFailure = raleigh.riskOfFailure/(double(histYear+synthYear));
+	cary.riskOfFailure = cary.riskOfFailure/(double(histYear+synthYear));
+	
+	for(int x = 0; x< 20; x++)
+	{
+		owasa.storageRisk[x] = owasa.storageRisk[x]/(double(histYear+synthYear));
+		if(owasa.storageRisk[x]>owasa.insuranceUse)
+		{
+			owasa.riskVolume[week-1] = (20.0-double(x))/20.0;
+			
+			break;
+		}
+	}
+	for(int x = 0; x< 20; x++)
+	{
+		durham.storageRisk[x] = durham.storageRisk[x]/(double(histYear+synthYear));
+		if(durham.storageRisk[x]>durham.insuranceUse)
+		{
+			durham.riskVolume[week-1] = (20.0-double(x))/20.0;
+			break;
+		}
+	}
+	for(int x = 0; x< 20; x++)
+	{
+		raleigh.storageRisk[x] = raleigh.storageRisk[x]/(double(histYear+synthYear));
+		if(raleigh.storageRisk[x]>raleigh.insuranceUse)
+		{
+			raleigh.riskVolume[week-1] = (20.0-double(x))/20.0;
+			break;
+		}
+	}
+	for(int x = 0; x< 20; x++)
+	{
+		cary.storageRisk[x] = cary.storageRisk[x]/(double(histYear+synthYear));
+		if(cary.storageRisk[x]>cary.insuranceUse)
+		{
+			cary.riskVolume[week-1] = double(x)/20.0;
+			break;
+		}
+	}
+	
+	return;
+}
 void Simulation::createInfrastructure()
 {
 	int owasaConstruction;
@@ -1621,31 +1935,37 @@ void Simulation::createInfrastructure()
 				case 0:
 					systemStorage.buildULexp();
 					riskOfFailureStorageROF.buildULexp();
+					riskOfFailureStorageIP.buildULexp();
 					owasa.addCapacity(2550.0);
 					break;
 				case 1:
 					systemStorage.buildCCexp();
 					riskOfFailureStorageROF.buildCCexp();
+					riskOfFailureStorageIP.buildCCexp();
 					owasa.addCapacity(3000.0);
 					break;
 				case 2:
 					systemStorage.buildSQlow();
 					riskOfFailureStorageROF.buildSQlow();
+					riskOfFailureStorageIP.buildSQlow();
 					owasa.addCapacity(1500.0);
 					break;
 				case 3:
 					systemStorage.buildSQhigh();
 					riskOfFailureStorageROF.buildSQhigh();
+					riskOfFailureStorageIP.buildSQhigh();
 					owasa.addCapacity(2200.0);
 					break;
 				case 4:
 					systemStorage.buildWWWTPlow(owasa.westernWakeTreatmentFrac, durham.westernWakeTreatmentFrac, raleigh.westernWakeTreatmentFrac);
 					riskOfFailureStorageROF.buildWWWTPlow(owasa.westernWakeTreatmentFrac, durham.westernWakeTreatmentFrac, raleigh.westernWakeTreatmentFrac);
+					riskOfFailureStorageIP.buildWWWTPlow(owasa.westernWakeTreatmentFrac, durham.westernWakeTreatmentFrac, raleigh.westernWakeTreatmentFrac);
 					wwWTPInsuranceTrigger = 1.0;
 					break;
 				case 5:
 					systemStorage.buildWWWTPhigh(owasa.westernWakeTreatmentFrac, durham.westernWakeTreatmentFrac, raleigh.westernWakeTreatmentFrac);
 					riskOfFailureStorageROF.buildWWWTPhigh(owasa.westernWakeTreatmentFrac, durham.westernWakeTreatmentFrac, raleigh.westernWakeTreatmentFrac);
+					riskOfFailureStorageIP.buildWWWTPhigh(owasa.westernWakeTreatmentFrac, durham.westernWakeTreatmentFrac, raleigh.westernWakeTreatmentFrac);
 					wwWTPInsuranceTrigger = 1.0;
 					break;
 			}
@@ -1661,34 +1981,41 @@ void Simulation::createInfrastructure()
 				case 0:
 					systemStorage.buildTeerQuarry();
 					riskOfFailureStorageROF.buildTeerQuarry();
+					riskOfFailureStorageIP.buildTeerQuarry();
 					break;
 				case 1:
 					systemStorage.buildReclaimedLow();
 					riskOfFailureStorageROF.buildReclaimedLow();
+					riskOfFailureStorageIP.buildReclaimedLow();
 					durhamReclaimedInsuranceTrigger = 1.0;
 					break;
 				case 2:
 					systemStorage.buildReclaimedHigh();
 					riskOfFailureStorageROF.buildReclaimedHigh();
+					riskOfFailureStorageIP.buildReclaimedHigh();
 					durhamReclaimedInsuranceTrigger = 1.0;
 					break;
 				case 3:
 					systemStorage.buildMichieLow();
 					riskOfFailureStorageROF.buildMichieLow();
+					riskOfFailureStorageIP.buildMichieLow();
 					durham.setCapacity(8849.0);
 				case 4:
 					systemStorage.buildMichieHigh();
 					riskOfFailureStorageROF.buildMichieHigh();
+					riskOfFailureStorageIP.buildMichieHigh();
 					durham.setCapacity(14049.0);
 					break;
 				case 5:
 					systemStorage.buildWWWTPlow(owasa.westernWakeTreatmentFrac, durham.westernWakeTreatmentFrac, raleigh.westernWakeTreatmentFrac);
 					riskOfFailureStorageROF.buildWWWTPlow(owasa.westernWakeTreatmentFrac, durham.westernWakeTreatmentFrac, raleigh.westernWakeTreatmentFrac);
+					riskOfFailureStorageIP.buildWWWTPlow(owasa.westernWakeTreatmentFrac, durham.westernWakeTreatmentFrac, raleigh.westernWakeTreatmentFrac);
 					wwWTPInsuranceTrigger = 1.0;
 					break;
 				case 6:
 					systemStorage.buildWWWTPhigh(owasa.westernWakeTreatmentFrac, durham.westernWakeTreatmentFrac, raleigh.westernWakeTreatmentFrac);
 					riskOfFailureStorageROF.buildWWWTPhigh(owasa.westernWakeTreatmentFrac, durham.westernWakeTreatmentFrac, raleigh.westernWakeTreatmentFrac);
+					riskOfFailureStorageIP.buildWWWTPhigh(owasa.westernWakeTreatmentFrac, durham.westernWakeTreatmentFrac, raleigh.westernWakeTreatmentFrac);
 					wwWTPInsuranceTrigger = 1.0;
 					break;
 			}
@@ -1704,32 +2031,38 @@ void Simulation::createInfrastructure()
 				case 0:
 					systemStorage.buildLittleRiverRal();
 					riskOfFailureStorageROF.buildLittleRiverRal();
+					riskOfFailureStorageIP.buildLittleRiverRal();
 					raleigh.addCapacity(3700.0);
 					littleRiverRalInsuranceTrigger = 1.0;
 					break;
 				case 1:
 					systemStorage.buildRalQuarry();
 					riskOfFailureStorageROF.buildRalQuarry();
+					riskOfFailureStorageIP.buildRalQuarry();
 					break;
 				case 2:
 					systemStorage.buildNeuseIntake();
 					riskOfFailureStorageROF.buildNeuseIntake();
+					riskOfFailureStorageIP.buildNeuseIntake();
 					ralIntakeInsuranceTrigger = 1.0;
 					break;
 				case 3:
 					systemStorage.reallocateFallsLake(fallsLakeReallocation);
 					riskOfFailureStorageROF.reallocateFallsLake(fallsLakeReallocation);
+					riskOfFailureStorageIP.reallocateFallsLake(fallsLakeReallocation);
 					raleigh.addCapacity(fallsLakeReallocation);
 					raleigh.addInsStorage(fallsLakeReallocation);
 					break;
 				case 4:
 					systemStorage.buildWWWTPlow(owasa.westernWakeTreatmentFrac, durham.westernWakeTreatmentFrac, raleigh.westernWakeTreatmentFrac);
 					riskOfFailureStorageROF.buildWWWTPlow(owasa.westernWakeTreatmentFrac, durham.westernWakeTreatmentFrac, raleigh.westernWakeTreatmentFrac);
+					riskOfFailureStorageIP.buildWWWTPlow(owasa.westernWakeTreatmentFrac, durham.westernWakeTreatmentFrac, raleigh.westernWakeTreatmentFrac);
 					wwWTPInsuranceTrigger = 1.0;
 					break;
 				case 5:
 					systemStorage.buildWWWTPhigh(owasa.westernWakeTreatmentFrac, durham.westernWakeTreatmentFrac, raleigh.westernWakeTreatmentFrac);
 					riskOfFailureStorageROF.buildWWWTPhigh(owasa.westernWakeTreatmentFrac, durham.westernWakeTreatmentFrac, raleigh.westernWakeTreatmentFrac);
+					riskOfFailureStorageIP.buildWWWTPhigh(owasa.westernWakeTreatmentFrac, durham.westernWakeTreatmentFrac, raleigh.westernWakeTreatmentFrac);
 					wwWTPInsuranceTrigger = 1.0;
 					break;
 			}
@@ -1767,6 +2100,11 @@ void Simulation::createInfrastructureRisk(int realization, int synthYear, double
 	double dROFs = 0.0;
 	double rROFs = 0.0;
 	double cROFs = 0.0;
+	double oIPs = 0.0;
+	double dIPs = 0.0;
+	double rIPs = 0.0;
+	double cIPs = 0.0;
+
 	int counter = 0;
 	int syntheticIndex = 0;
 	double thisTimeO = 0.0;
@@ -1778,10 +2116,35 @@ void Simulation::createInfrastructureRisk(int realization, int synthYear, double
 	raleigh.infRisk = 0.0;
 	cary.infRisk = 0.0;
 	owasa.infRisk = 0.0;
+	durham.probReach = 0.0;
+	raleigh.probReach = 0.0;
+	cary.probReach = 0.0;
+	owasa.probReach = 0.0;
 	int yearROF;
 	int monthROF;
 	int weekROF;
 	int numdaysROF;
+	
+	double durhamS = systemStorage.getDurhamStorageVol();
+	double teerS =  systemStorage.getTeerStorageVol();
+	double CCRS =  systemStorage.getCCRStorageVol();
+	double ULS =  systemStorage.getULStorageVol();
+	double STQS =  systemStorage.getSTQStorageVol();
+	double owasaS =  systemStorage.getOWASAStorageVol();
+	double lakeWBS = systemStorage.getLakeWBStorageVol();
+	double flSS =  systemStorage.getFallsSupplyStorageVol();
+	double flQS = systemStorage.getFallsQualityStorageVol();
+	double jlSS = systemStorage.getJordanSupplyStorageVol();
+	double jlQS = systemStorage.getJordanQualityStorageVol();
+	double caryJordanS = systemStorage.getCaryJordanStorageVol();
+	double raleighJordanS = systemStorage.getRaleighJordanStorageVol();
+	double durhamJordanS = systemStorage.getDurhamJordanStorageVol();
+	double owasaJordanS = systemStorage.getOWASAJordanStorageVol();
+	double littleRiverRalS = systemStorage.getLittleRiverRalStorageVol();
+	double raleighQS = systemStorage.getRaleighQuarryStorageVol();
+
+	
+	
 	for (int histRealizations = 0; histRealizations<histYear; histRealizations++)// determines the year of the historical streamflow record to be used in calculations
 	{
 		counter = 0;
@@ -1790,7 +2153,8 @@ void Simulation::createInfrastructureRisk(int realization, int synthYear, double
 		thisTimeR = 0;
 		thisTimeC = 0;
 		riskOfFailureDates.initializeDates(4,1,1,7,0);//each simulation is run independently (52 week intervals, then the slate is cleaned)
-		riskOfFailureStorageInf.updateReservoirStorageROF( 1.0, 1.0);								
+		riskOfFailureStorageIP.updateReservoirStorageROF(durhamS, teerS, CCRS, ULS, STQS, owasaS, lakeWBS, flSS, flQS, jlSS, jlQS, caryJordanS,  raleighJordanS,  durhamJordanS, owasaJordanS, littleRiverRalS, raleighQS);
+		riskOfFailureStorageInf.updateReservoirStorageROF();								
 					
 		while (counter<78)
 		{	
@@ -1837,9 +2201,11 @@ void Simulation::createInfrastructureRisk(int realization, int synthYear, double
 				fallsROFevap, 
 				wbROFevap, 
 				ROFevap, littleRiverRaleighROFInflow);
+			
+
 			riskOfFailureStorageInf.setSpillover(weekROF-1);//reservoir releases to meet downstream needs and/or reservoir capacity
 			riskOfFailureStorageInf.updateStorage(weekROF-1);//storage calcs
-					
+			
 			oROFs = riskOfFailureStorageInf.getOWASAStorage();//retrieve overall storage, OWASA
 			dROFs = riskOfFailureStorageInf.getDurhamStorage();//retrieve overall storage, Durham
 			rROFs = riskOfFailureStorageInf.getRaleighStorage();//retrieve overall storage, Raleigh
@@ -1860,6 +2226,48 @@ void Simulation::createInfrastructureRisk(int realization, int synthYear, double
 			{
 				thisTimeC = 1;
 			}
+			if(counter < 52)
+			{
+				riskOfFailureStorageIP.setDemands(durhamROFDemand, owasaROFDemand, raleighROFDemand, caryROFDemand, 	numdaysROF);//passes demands to storage calcs
+			
+				riskOfFailureStorageIP.setInflow(durhamROFInflow, //passes inflows to storage calcs
+					31.4*owasaROFInflow,
+					28.7*owasaROFInflow, 
+					1.2*owasaROFInflow, 
+					raleighROFInflow, 
+					wbROFInflow, 
+					claytonROFInflow, 
+					crabtreeROFInflow, jordanROFInflow, lillingtonROFInflow, 
+					raleighROFDemand*returnRatio[1][weekROF-1], 
+					durhamROFDemand*returnRatio[0][weekROF-1], durhamROFDemand*returnRatio[0][weekROF-1],owasaROFDemand*returnRatio[0][weekROF-1],
+					fallsROFevap, 
+					wbROFevap, 
+					ROFevap, littleRiverRaleighROFInflow);
+				riskOfFailureStorageIP.setSpillover(weekROF-1);//reservoir releases to meet downstream needs and/or reservoir capacity
+				riskOfFailureStorageIP.updateStorage(weekROF-1);
+				
+				oIPs = riskOfFailureStorageIP.getOWASAStorage();//retrieve overall storage, OWASA
+				if(oIPs < owasa.riskVolume[weekROF-1])
+				{
+					owasa.probReach += 1.0;
+				}
+				dIPs = riskOfFailureStorageIP.getDurhamStorage();//retrieve overall storage, Durham
+				if(dIPs < durham.riskVolume[weekROF -1])
+				{
+					durham.probReach += 1.0;
+				}
+				rIPs = riskOfFailureStorageIP.getRaleighStorage();//retrieve overall storage, Raleigh
+				if(rIPs < raleigh.riskVolume[weekROF-1])
+				{
+					raleigh.probReach += 1.0;
+				}
+				cIPs = riskOfFailureStorageIP.getCaryStorage();
+				if(cIPs < cary.riskVolume[weekROF-1])
+				{
+					cary.probReach += 1.0;
+				}
+			}
+
 			riskOfFailureDates.increase();//increase week by one
 			counter++;
 		}
@@ -1889,8 +2297,8 @@ void Simulation::createInfrastructureRisk(int realization, int synthYear, double
 		thisTimeR = 0;
 		thisTimeC = 0;
 		riskOfFailureDates.initializeDates(1,1,1,7,0);//each simulation is run independently (52 week intervals, then the slate is cleaned)
-		riskOfFailureStorageInf.updateReservoirStorageROF( 1.0, 1.0);
-										
+		riskOfFailureStorageInf.updateReservoirStorageROF();
+		riskOfFailureStorageIP.updateReservoirStorageROF(durhamS, teerS, CCRS, ULS, STQS, owasaS, lakeWBS, flSS, flQS, jlSS, jlQS, caryJordanS,  raleighJordanS,  durhamJordanS, owasaJordanS, littleRiverRalS, raleighQS);
 					
 		while (counter<52)
 		{	
@@ -1961,6 +2369,47 @@ void Simulation::createInfrastructureRisk(int realization, int synthYear, double
 			{
 				thisTimeC = 1;
 			}
+			if(counter < 52)
+			{
+				riskOfFailureStorageIP.setDemands(durhamROFDemand, owasaROFDemand, raleighROFDemand, caryROFDemand, 	numdaysROF);//passes demands to storage calcs
+			
+				riskOfFailureStorageIP.setInflow(durhamROFInflow, //passes inflows to storage calcs
+					31.4*owasaROFInflow,
+					28.7*owasaROFInflow, 
+					1.2*owasaROFInflow, 
+					raleighROFInflow, 
+					wbROFInflow, 
+					claytonROFInflow, 
+					crabtreeROFInflow, jordanROFInflow, lillingtonROFInflow, 
+					raleighROFDemand*returnRatio[1][weekROF-1], 
+					durhamROFDemand*returnRatio[0][weekROF-1], durhamROFDemand*returnRatio[0][weekROF-1],owasaROFDemand*returnRatio[0][weekROF-1],
+					fallsROFevap, 
+					wbROFevap, 
+					ROFevap, littleRiverRaleighROFInflow);
+				riskOfFailureStorageIP.setSpillover(weekROF-1);//reservoir releases to meet downstream needs and/or reservoir capacity
+				riskOfFailureStorageIP.updateStorage(weekROF-1);
+				
+				oIPs = riskOfFailureStorageIP.getOWASAStorage();//retrieve overall storage, OWASA
+				if(oIPs < owasa.riskVolume[weekROF-1])
+				{
+					owasa.probReach += 1.0;
+				}
+				dIPs = riskOfFailureStorageIP.getDurhamStorage();//retrieve overall storage, Durham
+				if(dIPs < durham.riskVolume[weekROF -1])
+				{
+					durham.probReach += 1.0;
+				}
+				rIPs = riskOfFailureStorageIP.getRaleighStorage();//retrieve overall storage, Raleigh
+				if(rIPs < raleigh.riskVolume[weekROF-1])
+				{
+					raleigh.probReach += 1.0;
+				}
+				cIPs = riskOfFailureStorageIP.getCaryStorage();
+				if(cIPs < cary.riskVolume[weekROF-1])
+				{
+					cary.probReach += 1.0;
+				}
+			}
 			riskOfFailureDates.increase();//increase week by one
 			counter++;
 		}	
@@ -1984,9 +2433,14 @@ void Simulation::createInfrastructureRisk(int realization, int synthYear, double
 		
 	}
 	owasa.infRisk = owasa.infRisk/(double(histYear+synthYear));
+	owasa.probReach = owasa.probReach/(double(histYear+synthYear));
 	durham.infRisk = durham.infRisk/(double(histYear+synthYear));
+	durham.probReach = durham.probReach/(double(histYear+synthYear));
 	raleigh.infRisk = raleigh.infRisk/(double(histYear+synthYear));
+	raleigh.probReach = raleigh.probReach/(double(histYear+synthYear));
 	cary.infRisk = cary.infRisk/(double(histYear+synthYear));
+	cary.probReach = cary.probReach/(double(histYear+synthYear));
+	
 	return;
 }
 void Simulation::triggerInfrastructure(int realization)
@@ -2254,6 +2708,8 @@ void Simulation::realizationLoop()
 		riskOfFailureStorageInf.initializeReservoirStorageROF(durham_res_supply_capacity, 
 																cane_creek_supply_capacity,	stone_quarry_supply_capacity,				university_lake_supply_capacity, lake_wheeler_benson_supply_capacity,falls_lake_supply_capacity, falls_lake_wq_capacity, jordan_lake_supply_capacity, jordan_lake_wq_capacity, cary_treatment_capacity, durham_cary_capacity, durham_owasa_capacity, raleigh_cary_capacity, raleigh_durham_capacity,raleigh.jordanLakeAlloc, durham.jordanLakeAlloc, owasa.jordanLakeAlloc, cary.jordanLakeAlloc, teer_quarry_supply_capacity, teer_quarry_intake_capacity, teer_quarry_outflow_capacity, little_river_raleigh_supply_capacity, western_wake_treatment_capacity, durham_reclaimation_capacity, raleigh_quarry_capacity, raleigh_quarry_intake_capacity, raleigh_quarry_outflow_capacity, raleigh_intake_capacity, cary_quarry_capacity, cary_quarry_intake_capacity, cary_quarry_outflow_capacity, owasa.westernWakeTreatmentFrac, durham.westernWakeTreatmentFrac, raleigh.westernWakeTreatmentFrac); 
 		riskOfFailureStorageROF.initializeReservoirStorageROF(durham_res_supply_capacity, 
+																cane_creek_supply_capacity,	stone_quarry_supply_capacity,					university_lake_supply_capacity, lake_wheeler_benson_supply_capacity,			falls_lake_supply_capacity, falls_lake_wq_capacity,					jordan_lake_supply_capacity, jordan_lake_wq_capacity,					cary_treatment_capacity, durham_cary_capacity, durham_owasa_capacity, raleigh_cary_capacity, raleigh_durham_capacity, raleigh.jordanLakeAlloc, durham.jordanLakeAlloc, owasa.jordanLakeAlloc, cary.jordanLakeAlloc, teer_quarry_supply_capacity, teer_quarry_intake_capacity, teer_quarry_outflow_capacity, little_river_raleigh_supply_capacity, western_wake_treatment_capacity, durham_reclaimation_capacity, raleigh_quarry_capacity, raleigh_quarry_intake_capacity, raleigh_quarry_outflow_capacity, raleigh_intake_capacity, cary_quarry_capacity, cary_quarry_intake_capacity, cary_quarry_outflow_capacity, owasa.westernWakeTreatmentFrac, durham.westernWakeTreatmentFrac, raleigh.westernWakeTreatmentFrac);
+		riskOfFailureStorageIP.initializeReservoirStorageROF(durham_res_supply_capacity, 
 																cane_creek_supply_capacity,	stone_quarry_supply_capacity,					university_lake_supply_capacity, lake_wheeler_benson_supply_capacity,			falls_lake_supply_capacity, falls_lake_wq_capacity,					jordan_lake_supply_capacity, jordan_lake_wq_capacity,					cary_treatment_capacity, durham_cary_capacity, durham_owasa_capacity, raleigh_cary_capacity, raleigh_durham_capacity, raleigh.jordanLakeAlloc, durham.jordanLakeAlloc, owasa.jordanLakeAlloc, cary.jordanLakeAlloc, teer_quarry_supply_capacity, teer_quarry_intake_capacity, teer_quarry_outflow_capacity, little_river_raleigh_supply_capacity, western_wake_treatment_capacity, durham_reclaimation_capacity, raleigh_quarry_capacity, raleigh_quarry_intake_capacity, raleigh_quarry_outflow_capacity, raleigh_intake_capacity, cary_quarry_capacity, cary_quarry_intake_capacity, cary_quarry_outflow_capacity, owasa.westernWakeTreatmentFrac, durham.westernWakeTreatmentFrac, raleigh.westernWakeTreatmentFrac); 
 		
 		year = simDates.getYear();//passes the dates from the simDates class to the main simulation
@@ -2265,7 +2721,6 @@ void Simulation::realizationLoop()
 		owasa.clearVariablesForRealization(year);
 		raleigh.clearVariablesForRealization(year);
 		cary.clearVariablesForRealization(year);
-		createRiskOfFailure(realization, year-1, durham.averageUse, owasa.averageUse, raleigh.averageUse, cary.averageUse);
 		durham.priceInsurance(year, realization);
 		owasa.priceInsurance(year, realization);
 		raleigh.priceInsurance(year, realization);
@@ -2291,28 +2746,11 @@ void Simulation::realizationLoop()
 			cary.fillRestrictionsArray(season);
 			raleigh.fillRestrictionsArray(season);
 			
+			createRiskOfFailure(realization, year-2, durham.averageUse, owasa.averageUse, raleigh.averageUse, cary.averageUse);
+				
 			/////////////////////////////////////////////////////////////////////////////////////////////////////////
 			
 			// Finding OWASA's current risk of failure (for restrictions, ROF calcs for transfers are performed later for all utilities)
-			owasaLevel = int(volumeIncrements*owasa.storageFraction);
-			if (owasaLevel > 19) owasaLevel = 19;
-			else if (owasaLevel < 0) owasaLevel = 0;
-			owasa.ROF_res = owasa.riskOfFailure[owasaLevel][week-1];
-			
-			durhamLevel = int(volumeIncrements*durham.storageFraction);
-			if (durhamLevel > 19) durhamLevel = 19;
-			else if (durhamLevel < 0) durhamLevel = 0;
-			durham.ROF_res = durham.riskOfFailure[durhamLevel][week-1];
-			
-			raleighLevel = int(volumeIncrements*raleigh.storageFraction);
-			if (raleighLevel > 19) raleighLevel = 19;
-			else if (raleighLevel < 0) raleighLevel = 0;
-			raleigh.ROF_res = raleigh.riskOfFailure[raleighLevel][week-1];
-			
-			caryLevel = int(volumeIncrements*cary.storageFraction);
-			if (caryLevel > 19) caryLevel = 19;
-			else if (caryLevel < 0) caryLevel = 0;
-			cary.ROF_res = cary.riskOfFailure[caryLevel][week-1];
 			
 
 			// Use the demand PDF to estimate uncertain demand, also finds current level of restrictions (and revenue losses from them)
@@ -2352,72 +2790,32 @@ void Simulation::realizationLoop()
 							
 			if(formulation > 0) 
 			{
-				durham.calcTransferTriggers(week);
-				owasa.calcTransferTriggers(week);
-				raleigh.calcTransferTriggers(week);
-				durham.TTrigger = durham.weeklyTransferTriggers;
-				owasa.TTrigger = owasa.weeklyTransferTriggers;
-				raleigh.TTrigger = raleigh.weeklyTransferTriggers;
-				
 				//Transfer requests are granted based on the limitations of infrastructure
-				systemStorage.calcTransfers(durham.TTrigger,durham.ROF_res, owasa.TTrigger, owasa.ROF_res, raleigh.TTrigger, raleigh.ROF_res, owasa.weeklyDemand);
+				systemStorage.calcTransfers(durham.TTriggerN,durham.riskOfFailure, owasa.TTriggerN, owasa.riskOfFailure, raleigh.TTriggerN, raleigh.riskOfFailure, owasa.weeklyDemand);
+				
+				durham.weeklyTransferVolume = systemStorage.getDurhamTransfers();
+				owasa.weeklyTransferVolume = systemStorage.getOWASATransfers();
+				raleigh.weeklyTransferVolume = systemStorage.getRaleighTransfers();
+				durham.payForTransfers(transferCosts);
+				owasa.payForTransfers(transferCosts);
+				raleigh.payForTransfers(transferCosts);
+				// Use the mitigation fund to calculate water transfer payments (sent to Cary)			
+				if((durham.weeklyTransferVolume+owasa.weeklyTransferVolume+raleigh.weeklyTransferVolume)>0.0)
+				{
+					cary.Fund.add((durham.weeklyTransferVolume + owasa.weeklyTransferVolume + raleigh.weeklyTransferVolume)*transferCosts);
+				}
+
 			}
 			//Update reservoir storage levels
 			systemStorage.setSpillover(week-1);
 			systemStorage.updateStorage(week-1);
 			//Retrieve the weekly transfers
-			durham.weeklyTransferVolume = systemStorage.getDurhamTransfers();
-			owasa.weeklyTransferVolume = systemStorage.getOWASATransfers();
-			raleigh.weeklyTransferVolume = systemStorage.getRaleighTransfers();
-			// Use the mitigation fund to calculate water transfer payments (sent to Cary)
-			if(durham.weeklyTransferVolume>0.0)
-			{
-				durham.Fund.subtract(durham.weeklyTransferVolume*transferCosts);
-			}
-			if(owasa.weeklyTransferVolume>0.0)
-			{
-				owasa.Fund.subtract(owasa.weeklyTransferVolume*transferCosts);
-			}
-			if(raleigh.weeklyTransferVolume>0.0)
-			{
-				raleigh.Fund.subtract(raleigh.weeklyTransferVolume*transferCosts);
-			}
-			if((durham.weeklyTransferVolume+owasa.weeklyTransferVolume+raleigh.weeklyTransferVolume)>0.0)
-			{
-				cary.Fund.add((durham.weeklyTransferVolume + owasa.weeklyTransferVolume + raleigh.weeklyTransferVolume)*transferCosts);
-			}
 			// Get current weekly demand baseline values for each utility
 			durhamFlowWeekBaseline = durham.demandBaseline[year-1][week-1] - durhamReclaimedInsuranceTrigger*durhamReclaimedCap*numdays - wwWTPInsuranceTrigger*durhamTreatmentCap*numdays;
 			owasaFlowWeekBaseline = owasa.demandBaseline[year-1][week-1]  - wwWTPInsuranceTrigger*owasaTreatmentCap*numdays;
 			raleighFlowWeekBaseline = raleigh.demandBaseline[year-1][week-1] + fallsEvap.averages[week-1]*raleigh.Fund.insuranceStorage*raleighBaselineMultiplier - wwWTPInsuranceTrigger*raleighTreatmentCap*numdays - ralIntakeInsuranceTrigger*raleighIntakeCap*numdays;
 			caryFlowWeekBaseline = cary.demandBaseline[year-1][week-1];
-			owasaLevelIns = int(volumeIncrements*owasa.Fund.insuranceStorage);
-			if (owasaLevelIns>19)
-			{
-				owasaLevelIns = 19;
-			}
-			owasa.ROF_resIns = owasa.riskOfFailure[owasaLevelIns][week-1];
-
-			raleighLevelIns = int(volumeIncrements*raleigh.Fund.insuranceStorage);
-			if(raleighLevelIns >19)
-			{
-				raleighLevelIns = 19;
-			}
-			raleigh.ROF_resIns = raleigh.riskOfFailure[raleighLevelIns][week-1];
-				
-			durhamLevelIns = int(volumeIncrements*durham.Fund.insuranceStorage);
-			if(durhamLevelIns >19)
-			{
-				durhamLevelIns = 19;
-			}
-			durham.ROF_resIns = durham.riskOfFailure[durhamLevelIns][week-1];
-				
-			caryLevelIns = int(volumeIncrements*cary.Fund.insuranceStorage);
-			if(caryLevelIns >19)
-			{
-				caryLevelIns = 19;
-			}
-			cary.ROF_resIns = cary.riskOfFailure[caryLevelIns][week-1];
+			
 			durhamSpill = systemStorage.getDurhamSpillage();
 			OWASASpill = systemStorage.getOWASASpillage();
 			insuranceFallsInflow = (fallsActualInflow + durhamSpill + durham.weeklyDemand*returnRatio[0][week-1]-systemStorage.fallsArea*actualFallsEvap)*(14700.0/34700.0) + raleigh.weeklyTransferVolume;
@@ -2425,10 +2823,10 @@ void Simulation::realizationLoop()
 					jordanActualInflow-actualEvap*13900)*cary.jordanLakeAlloc*(45800.0/(94600.0+45800.0));
 				
 				//Determine insurance payout (goes directly to the mitigation fund)
-			durham.setInsurancePayment(durhamFlowWeekBaseline, durhamActualInflow + durham.weeklyTransferVolume);
-			owasa.setInsurancePayment(owasaFlowWeekBaseline, owasaActualInflow*61.3 + owasa.weeklyTransferVolume);
-			raleigh.setInsurancePayment(raleighFlowWeekBaseline, insuranceFallsInflow + littleRiverRalInsuranceTrigger*littleRiverRaleighActualInflow);
-			cary.setInsurancePayment(caryFlowWeekBaseline, insuranceJordanInflow);
+			durham.setInsurancePayment(durhamFlowWeekBaseline, durhamActualInflow + durham.weeklyTransferVolume, week);
+			owasa.setInsurancePayment(owasaFlowWeekBaseline, owasaActualInflow*61.3 + owasa.weeklyTransferVolume, week);
+			raleigh.setInsurancePayment(raleighFlowWeekBaseline, insuranceFallsInflow + littleRiverRalInsuranceTrigger*littleRiverRaleighActualInflow, week);
+			cary.setInsurancePayment(caryFlowWeekBaseline, insuranceJordanInflow, week);
 						
 			//retrieve updated storage levels
 			owasa.storageFraction = systemStorage.getOWASAStorage();
@@ -2453,11 +2851,11 @@ void Simulation::realizationLoop()
 				createInfrastructure();
 				createInfrastructureRisk(realization, year-2, durham.averageUse, owasa.averageUse, raleigh.averageUse, cary.averageUse);
 				triggerInfrastructure(realization);
-				createRiskOfFailure(realization, year-2, durham.averageUse, owasa.averageUse, raleigh.averageUse, cary.averageUse);
 				durham.annualUpdate(year-1, realization);
 				owasa.annualUpdate(year-1, realization);
 				cary.annualUpdate(year-1, realization);
 				raleigh.annualUpdate(year-1, realization);
+				cout<<durham.probReach<<"  "<<raleigh.probReach<<"  "<<owasa.probReach<<"  "<<cary.probReach<<endl;
 
 				//Upgrade Cary WTP to 56 MGD in 2016
 				if (caryUpgrades[caryWTPcounter]<cary.averageUse)

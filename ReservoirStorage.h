@@ -11,7 +11,8 @@ public:
 	
 	void initializeReservoirStorageROF(double durhamCap, double CCRCap, double StQCap, double ULCap, double lakeWBCap, double fallsLakeSupplyCap, double fallsLakeQualityCap, double jordanLakeSupplyCap, double jordanLakeQualityCap, double CaryTreatmentCap, double DurhamCaryCap, double DurhamOWASACap, double RaleighCaryCap, double RaleighDurhamCap, double raleighAllocation, double durhamAllocation, double owasaAllocation, double caryAllocation, double teerQCap, double tQIc, double tQOc, double littleRiverRaleighCap, double westTrtCap, double durhamRecCap, double rQc, double rQIc, double rQOc, double rIc, double cQs, double cQIs, double cQOs, double oWWWTP, double dWWWTP, double rWWWTP);
 	
-	void updateReservoirStorageROF(double storageVolume, double storageIncrements);
+	void updateReservoirStorageROF(double durhamS, double teerS, double CCRS, double ULS, double STQS, double owasaS, double lakeWBS, double flSS, double flQS, double jlSS, double jlQS, double caryJordanS, double raleighJordanS, double durhamJordanS, double owasaJordanS, double littleRiverRalS, double raleighQS);
+	void updateReservoirStorageROF();
 	
 	void setDemands(double durham, double owasa, double cary, double raleigh, int numberOfDaysInWeek);
 	
@@ -61,6 +62,27 @@ public:
 	void reallocateFallsLake(double fallsLakeRe);
 	void buildWWWTPlow(double oF, double dF, double rF);
 	void buildWWWTPhigh(double oF, double dF, double rF);
+	double getExcessO();
+	double getExcessD();
+	double getExcessR();
+	double getExcessC();
+	double getDurhamStorageVol();
+	double getTeerStorageVol();
+	double getCCRStorageVol();
+	double getULStorageVol();
+	double getSTQStorageVol();
+	double getOWASAStorageVol();
+	double getLakeWBStorageVol();
+	double getFallsSupplyStorageVol();
+	double getFallsQualityStorageVol();
+	double getJordanSupplyStorageVol();
+	double getJordanQualityStorageVol();
+	double getCaryJordanStorageVol();
+	double getRaleighJordanStorageVol();
+	double getDurhamJordanStorageVol();
+	double getOWASAJordanStorageVol();
+	double getLittleRiverRalStorageVol();
+	double getRaleighQuarryStorageVol();
 
 private:
 	
@@ -184,6 +206,11 @@ private:
 	double jordanLakeMinRelease;
 	double raleighLittleRiverSpillage;
 	double enoSpillage;
+	
+	double owasaExcess;
+	double raleighExcess;
+	double durhamExcess;
+	double caryExcess;
 	
 	
 	/////Demands

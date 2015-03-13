@@ -35,12 +35,11 @@ WaterUtility::~WaterUtility()
 	zap(inflows2DIrr, 78); zap(inflows2DNon, 78);
 	zap(demand2DIrr, 18); zap(demand2DNon, 18);
 	zap(actualPDF, 16);
-	zap(riskOfFailure, 20);
-	zap(probReach, 20);
 	zap(infMatrix, infrastructureCount);
 	zap(annualPayments, terminateYear);
 	zap(netPresentCostInfrastructure);
-	
+	zap(storageRisk);
+	zap(riskVolume);
 
 }
 
@@ -103,13 +102,13 @@ void WaterUtility::configure(int nmonths, int nyears, int ntypes, int ntiers, in
 	general_2d_allocate(demandVariation, numRealizations, 52*terminateYear, 0.0);
 	general_2d_allocate(actualPDF, 16, 17, 0.0);
 	
-	general_2d_allocate(riskOfFailure, 20, 52, 0.0);
-	general_2d_allocate(probReach, 20, 52, 0.0);
 	
 	general_2d_allocate(infMatrix,infrastructureCount, 5, 0.0);
 	general_2d_allocate(annualPayments, terminateYear, numRealizations, 0.0);
 	general_1d_allocate(netPresentCostInfrastructure, numRealizations, 0.0);
-
+	
+	general_1d_allocate(storageRisk, 20, 0.0);
+	general_1d_allocate(riskVolume, 52, 0.0);
 	
 	
 	if(formulation == 0)
@@ -202,14 +201,14 @@ void WaterUtility::writeInflowDemandPDF(int inflowR, int UDr, int rows_PDF, int 
 	}
 }
 
-void WaterUtility::setInsurancePayment(double demandBaseline, double inflows)
+void WaterUtility::setInsurancePayment(double demandBaseline, double inflows, int week)
 {
+	Fund.getInsuranceStage(demandBaseline, inflows);
 	
-	if(ROF_resIns>insuranceUse)
+	if(Fund.insuranceStorage<=riskVolume[week-1])
 	{
 		Fund.setInsurancePayment(insurancePayment);
 	}
-	Fund.getInsuranceStage(demandBaseline, inflows);
 
 }
 
@@ -279,9 +278,9 @@ void WaterUtility::calculateRestrictions(int year, int week, int numdays, int mo
 	
 	if(usesROF) // use ROF for owasa and raleigh
 	{
-		if (restrictionsOn[restrictionStage] < ROF_res) // as long as current storage is below the restriction triggers for a given week, increase stage
+		if (restrictionsOn[restrictionStage] < riskOfFailure) // as long as current storage is below the restriction triggers for a given week, increase stage
 			restrictionStage += 1;
-		while (restrictionsOff[restrictionStage] > ROF_res) // vice versa for removing restriction stages
+		while (restrictionsOff[restrictionStage] > riskOfFailure) // vice versa for removing restriction stages
 			restrictionStage -= 1;
 	}
 	else
@@ -318,28 +317,14 @@ void WaterUtility::calculateRestrictions(int year, int week, int numdays, int mo
 		demandDeficit = 0;
 	}
 }
-
-void WaterUtility::calcTransferTriggers(int week)
-{	
-	int transferLevel = volumeIncrements-1;
-	double ROF = 0;	
-	
-	//Calculating risk-of-failure for transfers - need to find the storage level corresponding with the 'acceptable' risk-of-failure.  Once that storage level is calculated,
-	//transfers will be requested up to that point by the utilities.  Storage requests can only be granted to the limits of transfer infrastructure
-	
-	transferLevel = volumeIncrements;
-	ROF = 0;
-			
-	while(ROF < TTriggerI && transferLevel > -1)//Runs through the discritizations of reservoir storage to find the first 'bin' in the given week that has
-	{													//a risk-of-failure larger than the transfer trigger
-		transferLevel--;
-		ROF = riskOfFailure[transferLevel][week-1];
+void WaterUtility::payForTransfers(double transferCosts)
+{
+	if(weeklyTransferVolume>0.0)
+	{
+		Fund.subtract(weeklyTransferVolume*transferCosts);
 	}
-
-	weeklyTransferTriggers = double(transferLevel + 1)/double(volumeIncrements);
-
+	return;
 }
-
 void WaterUtility::clearVariablesForSimulation()
 {  
 	//Initial values for objective variables
@@ -1003,23 +988,7 @@ void WaterUtility::addDebt(int year, int realization, double amount, int repayme
 }
 void WaterUtility::priceInsurance(int year, int realization)
 {
-	int earliestToggle;
-	double riskOfTrigger = 0;
-	
-	for (int startingWeek = 1;  startingWeek<53; startingWeek++)//determines the week of the year from which to calculate risk
-	{
-		earliestToggle = 0;
-		for (int startingVolume = volumeIncrements-1; startingVolume>=0; startingVolume--)// 
-		{	
-			if(riskOfFailure[startingVolume][startingWeek - 1]>insuranceUse&&earliestToggle == 0)
-			{
-				riskOfTrigger+=probReach[startingVolume][startingWeek-1];
-				earliestToggle = 1;
-			}		
-		}
-	}
-	annualPayments[year][realization] += insurancePremium*riskOfTrigger*insurancePayment;
-		
+	annualPayments[year][realization] += insurancePremium*probReach*insurancePayment;		
 return;
 }
 
