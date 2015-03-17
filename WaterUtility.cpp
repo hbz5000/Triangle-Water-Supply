@@ -32,7 +32,7 @@ WaterUtility::~WaterUtility()
 	zap(droughtSurcharges, numTiers+1);
 	zap(inflows1DIrr); zap(inflows1DNon);
 	zap(demand1DIrr); zap(demand1DNon);
-	zap(inflows2DIrr, 78); zap(inflows2DNon, 78);
+	zap(inflows2DIrr, 81); zap(inflows2DNon, 81);
 	zap(demand2DIrr, 18); zap(demand2DNon, 18);
 	zap(actualPDF, 16);
 	zap(infMatrix, infrastructureCount);
@@ -111,10 +111,7 @@ void WaterUtility::configure(int nmonths, int nyears, int ntypes, int ntiers, in
 	general_1d_allocate(riskVolume, 52, 0.0);
 	
 	
-	if(formulation == 0)
-		usesROF = false;
-	else
-		usesROF = true;
+	usesROF = true;
 	
 }
 

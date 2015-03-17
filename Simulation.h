@@ -32,6 +32,7 @@ public:
 	void createInfrastructure();
 	void triggerInfrastructure(int realization);
 	void updateFallsQuality();
+	void setStartYear(int SSY);
 	
 	WaterUtility durham, owasa, cary, raleigh;
 	TimeSeriesData durhamInflows, owasaInflows, fallsInflows, wheelerInflows, crabtreeInflows, claytonInflows, jordanInflows, lillingtonInflows, littleRiverRaleighInflows;
@@ -70,6 +71,15 @@ private:
 	data_t claytonInflow, crabtreeInflow;
 	data_t jordanLakeInflow, lillingtonGaugeInflow, littleRiverRaleighInflow;
 	
+	data_t littleRiverInflowSYN;
+	data_t michieInflowSYN;
+	data_t owasaInflowSYN;
+	data_t evaporationSYN;
+	data_t fallsLakeInflowSYN, lakeWBInflowSYN;
+	data_t fallsLakeEvaporationSYN, lakeWheelerEvaporationSYN;
+	data_t claytonInflowSYN, crabtreeInflowSYN;
+	data_t jordanLakeInflowSYN, lillingtonGaugeInflowSYN, littleRiverRaleighInflowSYN;
+	
 	data_t caryFutureD, raleighFutureD, durhamFutureD, owasaFutureD;
 	data_t caryFutureB, raleighFutureB, durhamFutureB, owasaFutureB;
 	data_t durhamROF, owasaROF, raleighROF;
@@ -103,6 +113,7 @@ private:
 	double transferCosts;
 	int numRealizations;
 	int numFutureYears;
+	int startSimulationYear;
 	int volumeIncrements, costRiskLevel;
 	
 	

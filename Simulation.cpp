@@ -14,6 +14,11 @@ void Simulation::setNumYears(int c_terminateYear)
 	terminateYear = c_terminateYear;
 	return;
 }
+void Simulation::setStartYear(int c_startSimulationYear)
+{
+	startSimulationYear = c_startSimulationYear;
+	return;
+}
 
 void Simulation::setNumDecisions(int c_num_dec)
 {
@@ -226,45 +231,57 @@ void Simulation::importDataFiles()
 	// 82 Years: 1926 - 2007
 	// 83 Years: 1928 - 2010
 	// 83 Years: 1929 - 2011 (little river raleigh)
-	readFile(michieInflow, directoryName + "updatedMichieInflow.csv", 52, 82);
-	readFile(littleRiverInflow, directoryName + "updatedLittleRiverInflow.csv", 52, 82);
-	readFile(owasaInflow, directoryName + "updatedOWASAInflow.csv", 52, 82);
-	readFile(fallsLakeInflow, directoryName + "updatedFallsLakeInflow.csv", 83, 52);
-	readFile(lakeWBInflow, directoryName + "updatedLakeWBInflow.csv", 83, 52);
-	readFile(claytonInflow, directoryName + "claytonGageInflow.csv", 83, 52);
-	readFile(crabtreeInflow, directoryName + "crabtreeCreekInflow.csv", 83, 52);
+	readFile(michieInflow, directoryName + "updatedMichieInflow.csv", 81, 52);
+	readFile(littleRiverInflow, directoryName + "updatedLittleRiverInflow.csv", 81, 52);
+	readFile(owasaInflow, directoryName + "updatedOWASAInflow.csv", 81, 52);
+	readFile(fallsLakeInflow, directoryName + "updatedFallsLakeInflow.csv", 81, 52);
+	readFile(lakeWBInflow, directoryName + "updatedLakeWBInflow.csv", 81, 52);
+	readFile(claytonInflow, directoryName + "claytonGageInflow.csv", 81, 52);
+	readFile(crabtreeInflow, directoryName + "crabtreeCreekInflow.csv", 81, 52);
 	readFile(jordanLakeInflow, directoryName + "updatedJordanLakeInflow.csv", 81, 52);
 	readFile(lillingtonGaugeInflow, directoryName + "updatedLillingtonInflow.csv", 81, 52);
-	readFile(littleRiverRaleighInflow, directoryName + "updatedLittleRiverRaleighInflow.csv", 83, 52);
+	readFile(littleRiverRaleighInflow, directoryName + "updatedLittleRiverRaleighInflow.csv", 81, 52);
+	
+	readFile(michieInflowSYN, directoryName + "updatedMichieInflowSYN.csv", 1000, 70*52);
+	readFile(littleRiverInflowSYN, directoryName + "updatedLittleRiverInflowSYN.csv", 1000, 70*52);
+	readFile(owasaInflowSYN, directoryName + "updatedOWASAInflowSYN.csv", 1000, 70*52);
+	readFile(fallsLakeInflowSYN, directoryName + "updatedFallsLakeInflowSYN.csv", 1000, 70*52);
+	readFile(lakeWBInflowSYN, directoryName + "updatedLakeWBInflowSYN.csv", 1000, 70*52);
+	readFile(claytonInflowSYN, directoryName + "claytonGageInflowSYN.csv", 1000, 70*52);
+	readFile(crabtreeInflowSYN, directoryName + "crabtreeCreekInflowSYN.csv", 1000, 70*52);
+	readFile(jordanLakeInflowSYN, directoryName + "updatedJordanLakeInflowSYN.csv", 1000, 70*52);
+	readFile(lillingtonGaugeInflowSYN, directoryName + "updatedLillingtonInflowSYN.csv", 1000, 70*52);
+	readFile(littleRiverRaleighInflowSYN, directoryName + "updatedLittleRiverRaleighInflowSYN.csv", 1000, 70*52);
+	
 	
 	// Evaporation data (MG/acre)
 	// 82 years (1926 - 2007)
 	// 83 years (1928 - 2010)
-	readFile(evaporation, directoryName + "updatedEvap.csv", 52, 82); // for Durham and OWASA
-	readFile(fallsLakeEvaporation, directoryName + "fallsLakeEvap.csv", 83, 52);
-	readFile(lakeWheelerEvaporation, directoryName + "lakeWheelerBensonEvap.csv", 83, 52);
+	readFile(evaporation, directoryName + "updatedEvap.csv", 81, 52); // for Durham and OWASA
+	readFile(fallsLakeEvaporation, directoryName + "fallsLakeEvap.csv", 81, 52);
+	readFile(lakeWheelerEvaporation, directoryName + "lakeWheelerBensonEvap.csv", 81, 52);
 
 	// U files from Cholesky Factorization - combine with standardized inflows 
 	// To make stochastic inflows for weeks 27-52 (1) and weeks 1-26 (2).
 	// Each file is an upper triangular matrix, 52x52
-	readFile(durhamInflows.stoch1, directoryName + "updatedDurhamStoch1.csv", 52, 52);	
-	readFile(durhamInflows.stoch2, directoryName + "updatedDurhamStoch2.csv", 52, 52);
-	readFile(owasaInflows.stoch1, directoryName + "updatedOwasaStoch1.csv",  52, 52);
-	readFile(owasaInflows.stoch2, directoryName + "updatedOwasaStoch2.csv",  52, 52);
-	readFile(fallsInflows.stoch1, directoryName + "updatedFallsStoch1.csv", 52, 52);
-	readFile(fallsInflows.stoch2, directoryName + "updatedFallsStoch2.csv", 52, 52);
-	readFile(wheelerInflows.stoch1, directoryName + "updatedWheelerStoch1.csv", 52, 52);
-	readFile(wheelerInflows.stoch2, directoryName + "updatedWheelerStoch2.csv", 52, 52);
-	readFile(crabtreeInflows.stoch1, directoryName + "updatedCrabtreeStoch1.csv", 52, 52);
-	readFile(crabtreeInflows.stoch2, directoryName + "updatedCrabtreeStoch2.csv", 52, 52);
-	readFile(claytonInflows.stoch1, directoryName + "updatedClaytonStoch1.csv", 52, 52);
-	readFile(claytonInflows.stoch2, directoryName + "updatedClaytonStoch2.csv", 52, 52);
-	readFile(jordanInflows.stoch1, directoryName + "updatedJordanStoch1.csv", 52, 52);
-	readFile(jordanInflows.stoch2, directoryName + "updatedJordanStoch2.csv", 52, 52);
-	readFile(lillingtonInflows.stoch1, directoryName + "updatedLillingtonStoch1.csv", 52, 52);
-	readFile(lillingtonInflows.stoch2, directoryName + "updatedLillingtonStoch2.csv", 52, 52);
-	readFile(littleRiverRaleighInflows.stoch1, directoryName + "updatedLittleRiverRaleighStoch1.csv", 52, 52);
-	readFile(littleRiverRaleighInflows.stoch2, directoryName + "updatedLittleRiverRaleighStoch2.csv", 52, 52);
+	//readFile(durhamInflows.stoch1, directoryName + "updatedDurhamStoch1.csv", 52, 52);	
+	//readFile(durhamInflows.stoch2, directoryName + "updatedDurhamStoch2.csv", 52, 52);
+	//readFile(owasaInflows.stoch1, directoryName + "updatedOwasaStoch1.csv",  52, 52);
+	//readFile(owasaInflows.stoch2, directoryName + "updatedOwasaStoch2.csv",  52, 52);
+	//readFile(fallsInflows.stoch1, directoryName + "updatedFallsStoch1.csv", 52, 52);
+	//readFile(fallsInflows.stoch2, directoryName + "updatedFallsStoch2.csv", 52, 52);
+	//readFile(wheelerInflows.stoch1, directoryName + "updatedWheelerStoch1.csv", 52, 52);
+	//readFile(wheelerInflows.stoch2, directoryName + "updatedWheelerStoch2.csv", 52, 52);
+	//readFile(crabtreeInflows.stoch1, directoryName + "updatedCrabtreeStoch1.csv", 52, 52);
+	//readFile(crabtreeInflows.stoch2, directoryName + "updatedCrabtreeStoch2.csv", 52, 52);
+	//readFile(claytonInflows.stoch1, directoryName + "updatedClaytonStoch1.csv", 52, 52);
+	//readFile(claytonInflows.stoch2, directoryName + "updatedClaytonStoch2.csv", 52, 52);
+	//readFile(jordanInflows.stoch1, directoryName + "updatedJordanStoch1.csv", 52, 52);
+	//readFile(jordanInflows.stoch2, directoryName + "updatedJordanStoch2.csv", 52, 52);
+	//readFile(lillingtonInflows.stoch1, directoryName + "updatedLillingtonStoch1.csv", 52, 52);
+	//readFile(lillingtonInflows.stoch2, directoryName + "updatedLillingtonStoch2.csv", 52, 52);
+	//readFile(littleRiverRaleighInflows.stoch1, directoryName + "updatedLittleRiverRaleighStoch1.csv", 52, 52);
+	//readFile(littleRiverRaleighInflows.stoch2, directoryName + "updatedLittleRiverRaleighStoch2.csv", 52, 52);
 	
 	// U file from Cholesky Factorization - combine with standardized evaporation
 	// to make stochastic inflows for weeks 1 - 26 (2) and weeks 27 - 52 (1)
@@ -321,83 +338,10 @@ void Simulation::importDataFiles()
 	readFile(returnRatio, directoryName + "returnRatio.csv", 2, 52);
 	
 
-	// Correct owasaInflow to avoid taking the log of zero			
-	for (unsigned int i = 0; i < owasaInflow.size(); i++)
-	{
-		for (unsigned int j = 0; j < owasaInflow[0].size(); j++)
-		{
-			if(owasaInflow[i][j] <= 0)
-			{
-				owasaInflow[i][j] = .01;
-			}
-		}
-	}
-	
-	for (unsigned int i = 0; i < fallsLakeInflow.size(); i++)
-	{
-		for (unsigned int j = 0; j < fallsLakeInflow[0].size(); j++)
-		{
-			if(fallsLakeInflow[i][j] <= 0)
-			{
-				fallsLakeInflow[i][j] = .01;
-			}
-		}
-	}
-	for (unsigned int i = 0; i < lakeWBInflow.size(); i++)
-	{
-		for (unsigned int j = 0; j < lakeWBInflow[0].size(); j++)
-		{
-			if(lakeWBInflow[i][j] <= 0)
-			{
-				lakeWBInflow[i][j] = .01;
-			}
-		}
-	}
-	for (unsigned int i = 0; i < claytonInflow.size(); i++)
-	{
-		for (unsigned int j = 0; j < claytonInflow[0].size(); j++)
-		{
-			if(claytonInflow[i][j] <= 0)
-			{
-				claytonInflow[i][j] = .01;
-			}
-		}
-	}
-	for (unsigned int i = 0; i < crabtreeInflow.size(); i++)
-	{
-		for (unsigned int j = 0; j < crabtreeInflow[0].size(); j++)
-		{
-			if(crabtreeInflow[i][j] <= 0)
-			{
-				crabtreeInflow[i][j] = .01;
-			}
-		}
-	}
-	for (unsigned int i = 0; i < jordanLakeInflow.size(); i++)
-	{
-		for (unsigned int j = 0; j < jordanLakeInflow[0].size(); j++)
-		{
-			if(jordanLakeInflow[i][j] <= 0)
-			{
-				jordanLakeInflow[i][j] = .01;
-			}
-		}
-	}
-	for (unsigned int i = 0; i < lillingtonGaugeInflow.size(); i++)
-	{
-		for (unsigned int j = 0; j < lillingtonGaugeInflow[0].size(); j++)
-		{
-			if(lillingtonGaugeInflow[i][j] <= 0)
-			{
-				lillingtonGaugeInflow[i][j] = .01;
-			}
-		}
-	}
 }
 
 void Simulation::preconditionData(double unit_demand_multiplier, double future_demand_multiplier, bool firstTime)
 {
-	int startYear = 0;
 	numFutureYears = 51;
 	
 	durham.shouldAllocate = firstTime;
@@ -409,17 +353,17 @@ void Simulation::preconditionData(double unit_demand_multiplier, double future_d
 	for (int x = 0; x<numFutureYears; x++)
 	{
 		// Scaling a linear projection -- multiply the slope and subtract off changes to the y-intercept
-		cary.futureDemand[x] = caryFutureD[0][x+startYear]*future_demand_multiplier - caryFutureD[0][0]*(future_demand_multiplier-1);
-		raleigh.futureDemand[x] = raleighFutureD[0][x+startYear]*future_demand_multiplier - raleighFutureD[0][0]*(future_demand_multiplier-1);
-		durham.futureDemand[x] = durhamFutureD[0][x+startYear]*future_demand_multiplier - durhamFutureD[0][0]*(future_demand_multiplier-1);
-		owasa.futureDemand[x] = owasaFutureD[0][x+startYear]*future_demand_multiplier - owasaFutureD[0][0]*(future_demand_multiplier-1);
+		cary.futureDemand[x] = caryFutureD[0][x]*future_demand_multiplier - caryFutureD[0][0]*(future_demand_multiplier-1);
+		raleigh.futureDemand[x] = raleighFutureD[0][x]*future_demand_multiplier - raleighFutureD[0][0]*(future_demand_multiplier-1);
+		durham.futureDemand[x] = durhamFutureD[0][x]*future_demand_multiplier - durhamFutureD[0][0]*(future_demand_multiplier-1);
+		owasa.futureDemand[x] = owasaFutureD[0][x]*future_demand_multiplier - owasaFutureD[0][0]*(future_demand_multiplier-1);
 
 		for (int y = 0; y<5; y++)
 		{
-			cary.futureDemandBreakdown[y][x] = caryFutureB[y][x+startYear];
-			raleigh.futureDemandBreakdown[y][x] = raleighFutureB[y][x+startYear];
-			durham.futureDemandBreakdown[y][x] = durhamFutureB[y][x+startYear];
-			owasa.futureDemandBreakdown[y][x] = owasaFutureB[y][x+startYear];
+			cary.futureDemandBreakdown[y][x] = caryFutureB[y][x];
+			raleigh.futureDemandBreakdown[y][x] = raleighFutureB[y][x];
+			durham.futureDemandBreakdown[y][x] = durhamFutureB[y][x];
+			owasa.futureDemandBreakdown[y][x] = owasaFutureB[y][x];
 		}
 	}
 	
@@ -429,7 +373,7 @@ void Simulation::preconditionData(double unit_demand_multiplier, double future_d
 	/// Evaporation ///
 	///////////////////
 	int evapC = 52; // weeks per year in evaporation files
-	int evapR = 78; // historical years of evaporation files
+	int evapR = 81; // historical years of evaporation files
 	
 	if(firstTime)
 	{
@@ -438,15 +382,14 @@ void Simulation::preconditionData(double unit_demand_multiplier, double future_d
 		wheelerEvap.allocate(evapR, evapC, terminateYear*52, numRealizations);
 		
 		//this section allows for use of historic record of variable length
-		startYear = 0;
 		
 		for (int row = 0; row<evapR; ++row)
 		{
 			for (int column = 0; column<evapC; ++column)
 			{
-				durhamOwasaEvap.rawData[row][column] = evaporation[column][row+4+startYear];// evaporation data from this set starts 3 years ealier than the other two
-				fallsEvap.rawData[row][column] = fallsLakeEvaporation[row+1+startYear][column];
-				wheelerEvap.rawData[row][column] = lakeWheelerEvaporation[row+1+startYear][column];
+				durhamOwasaEvap.rawData[row][column] = evaporation[row][column];// evaporation data from this set starts 3 years ealier than the other two
+				fallsEvap.rawData[row][column] = fallsLakeEvaporation[row][column];
+				wheelerEvap.rawData[row][column] = lakeWheelerEvaporation[row][column];
 			}
 		}
 
@@ -468,15 +411,14 @@ void Simulation::preconditionData(double unit_demand_multiplier, double future_d
 	}
 	
 	//this section allows for use of historic record of variable length
-	startYear = 0;
 	
 	for (int row = 0; row < UDr; row++)
 	{		
 		for (int column = 0; column < UDc; column++)
 		{
-			cary.UD.rawData[row][column] = (cary.UnitDemand[column][row+startYear] - 1)*unit_demand_multiplier + 1;
-			owasa.UD.rawData[row][column] = (owasa.UnitDemand[column][row+startYear] - 1)*unit_demand_multiplier + 1;
-			durham.UD.rawData[row][column] = (durham.UnitDemand[column][row+startYear] - 1)*unit_demand_multiplier + 1;
+			cary.UD.rawData[row][column] = (cary.UnitDemand[column][row] - 1)*unit_demand_multiplier + 1;
+			owasa.UD.rawData[row][column] = (owasa.UnitDemand[column][row] - 1)*unit_demand_multiplier + 1;
+			durham.UD.rawData[row][column] = (durham.UnitDemand[column][row] - 1)*unit_demand_multiplier + 1;
 		}
 	}
 	
@@ -494,7 +436,7 @@ void Simulation::preconditionData(double unit_demand_multiplier, double future_d
 	
 	/// Inflow ///
 	inflowC = 52;//number of weeks in the inflow record
-	inflowR = 78;//length of historical streamflow record
+	inflowR = 81;//length of historical streamflow record
 	
 	if(firstTime)
 	{
@@ -509,20 +451,34 @@ void Simulation::preconditionData(double unit_demand_multiplier, double future_d
 		littleRiverRaleighInflows.allocate(inflowR, inflowC, terminateYear*52, numRealizations);
 
 		//Fill out raw data, allowing for use of historic record of variable length
-		startYear = 0;
 		for (int row = 0; row < inflowR; row++)
 		{
 			for (int col = 0; col < inflowC; col++)
 			{
-				durhamInflows.rawData[row][col]		= log(michieInflow[col][row+4+startYear]+littleRiverInflow[col][row+4+startYear]);
-				owasaInflows.rawData[row][col]		= log(owasaInflow[col][row+4+startYear]);
-				fallsInflows.rawData[row][col]		= log(fallsLakeInflow[row+2+startYear][col]);
-				wheelerInflows.rawData[row][col]	= log(lakeWBInflow[row+1+startYear][col]);
-				claytonInflows.rawData[row][col]	= log(claytonInflow[row+1+startYear][col]);
-				crabtreeInflows.rawData[row][col]	= log(crabtreeInflow[row+1+startYear][col]);
-				jordanInflows.rawData[row][col]		= log(jordanLakeInflow[row+startYear][col]);
-				lillingtonInflows.rawData[row][col]	= log(lillingtonGaugeInflow[row+startYear][col]);
-				littleRiverRaleighInflows.rawData[row][col] = log(littleRiverRaleighInflow[row+1+startYear][col]);
+				durhamInflows.rawData[row][col]		= log(michieInflow[row][col]+littleRiverInflow[row][col]);
+				owasaInflows.rawData[row][col]		= log(owasaInflow[row][col]);
+				fallsInflows.rawData[row][col]		= log(fallsLakeInflow[row][col]);
+				wheelerInflows.rawData[row][col]	= log(lakeWBInflow[row][col]);
+				claytonInflows.rawData[row][col]	= log(claytonInflow[row][col]);
+				crabtreeInflows.rawData[row][col]	= log(crabtreeInflow[row][col]);
+				jordanInflows.rawData[row][col]		= log(jordanLakeInflow[row][col]);
+				lillingtonInflows.rawData[row][col]	= log(lillingtonGaugeInflow[row][col]);
+				littleRiverRaleighInflows.rawData[row][col] = log(littleRiverRaleighInflow[row][col]);
+			}
+		}
+		for (int row = 0; row<numRealizations;row++)
+		{
+			for (int col = 0; col < terminateYear*52; col++)
+			{
+				durhamInflows.synthetic[row][col] 	= michieInflowSYN[row][col]+littleRiverInflowSYN[row][col];
+				owasaInflows.synthetic[row][col] 	= owasaInflowSYN[row][col];
+				fallsInflows.synthetic[row][col]	= fallsLakeInflowSYN[row][col];
+				wheelerInflows.synthetic[row][col]	= lakeWBInflowSYN[row][col];
+				claytonInflows.synthetic[row][col]	= claytonInflowSYN[row][col];
+				crabtreeInflows.synthetic[row][col]	= crabtreeInflowSYN[row][col];
+				jordanInflows.synthetic[row][col]	= jordanLakeInflowSYN[row][col];
+				lillingtonInflows.synthetic[row][col] = lillingtonGaugeInflowSYN[row][col];
+				littleRiverRaleighInflows.synthetic[row][col] = log(littleRiverRaleighInflowSYN[row][col]);
 			}
 		}
 		int streamflowStartYear = inflowR - UDr; 
@@ -662,16 +618,6 @@ void Simulation::generateStreamflows()
 			randomInflowNumber[x][y] = rand() % inflowR;
 		}
 	}
-	
-	durhamInflows.generateSynthetic(randomInflowNumber, terminateYear, numRealizations, true);
-	owasaInflows.generateSynthetic(randomInflowNumber, terminateYear, numRealizations, true);
-	fallsInflows.generateSynthetic(randomInflowNumber, terminateYear, numRealizations, true);
-	wheelerInflows.generateSynthetic(randomInflowNumber, terminateYear, numRealizations, true);
-	claytonInflows.generateSynthetic(randomInflowNumber, terminateYear, numRealizations, true);
-	crabtreeInflows.generateSynthetic(randomInflowNumber, terminateYear, numRealizations, true);
-	jordanInflows.generateSynthetic(randomInflowNumber, terminateYear, numRealizations, true);
-	lillingtonInflows.generateSynthetic(randomInflowNumber, terminateYear, numRealizations, true);
-	littleRiverRaleighInflows.generateSynthetic(randomInflowNumber, terminateYear, numRealizations, true);
 	
 	durhamOwasaEvap.generateSynthetic(randomInflowNumber, terminateYear, numRealizations, false);
 	fallsEvap.generateSynthetic(randomInflowNumber, terminateYear, numRealizations, false);
@@ -1391,7 +1337,7 @@ void Simulation::createRiskOfFailure(int realization, int synthYear, double durh
 			thisTimeRIP[x] = 0;
 			thisTimeCIP[x] = 0;
 		}
-		riskOfFailureDates.initializeDates(4,1,week,7,0);//each simulation is run independently (52 week intervals, then the slate is cleaned)
+		riskOfFailureDates.initializeDates(startSimulationYear,1,week,7,0);//each simulation is run independently (52 week intervals, then the slate is cleaned)
 	
 		riskOfFailureStorageROF.updateReservoirStorageROF(durhamS, teerS, CCRS, ULS, STQS, owasaS, lakeWBS, flSS, flQS, jlSS, jlQS, caryJordanS,  raleighJordanS,  durhamJordanS, owasaJordanS, littleRiverRalS, raleighQS);
 		riskOfFailureStorageIP.updateReservoirStorageROF();
@@ -1416,19 +1362,19 @@ void Simulation::createRiskOfFailure(int realization, int synthYear, double durh
 			riskOfFailureStorageIP.setDemands(durhamROFDemand, owasaROFDemand, raleighROFDemand, caryROFDemand, numdaysROF);//passes demands to storage calcs
 					
 			//Inflow Calcs
-			durhamROFInflow = michieInflow[weekROF-1][histRealizations+yearROF]+littleRiverInflow[weekROF-1][histRealizations+yearROF-3];//Durham Inflows
-			raleighROFInflow = fallsLakeInflow[histRealizations+yearROF-3][weekROF-1];//Raleigh
-			owasaROFInflow = owasaInflow[weekROF-1][histRealizations+yearROF];//OWASA
-			wbROFInflow = lakeWBInflow[histRealizations+yearROF-2][weekROF-1];//Wheeler&Benson
-			claytonROFInflow = claytonInflow[histRealizations+yearROF-2][weekROF-1];//Clayton gauge
-			crabtreeROFInflow = crabtreeInflow[histRealizations+yearROF-2][weekROF-1];// Crabtree creek
-			jordanROFInflow = jordanLakeInflow[histRealizations+yearROF-4][weekROF-1];
-			lillingtonROFInflow = lillingtonGaugeInflow[histRealizations+yearROF-4][weekROF-1];
-			littleRiverRaleighROFInflow = littleRiverRaleighInflow[histRealizations+yearROF-3][weekROF-1];
+			durhamROFInflow = michieInflow[histRealizations+yearROF-startSimulationYear][weekROF-1]+littleRiverInflow[histRealizations+yearROF-startSimulationYear][weekROF-1];//Durham Inflows
+			raleighROFInflow = fallsLakeInflow[histRealizations+yearROF-startSimulationYear][weekROF-1];//Raleigh
+			owasaROFInflow = owasaInflow[histRealizations+yearROF-startSimulationYear][weekROF-1];//OWASA
+			wbROFInflow = lakeWBInflow[histRealizations+yearROF-startSimulationYear][weekROF-1];//Wheeler&Benson
+			claytonROFInflow = claytonInflow[histRealizations+yearROF-startSimulationYear][weekROF-1];//Clayton gauge
+			crabtreeROFInflow = crabtreeInflow[histRealizations+yearROF-startSimulationYear][weekROF-1];// Crabtree creek
+			jordanROFInflow = jordanLakeInflow[histRealizations+yearROF-startSimulationYear][weekROF-1];
+			lillingtonROFInflow = lillingtonGaugeInflow[histRealizations+yearROF-startSimulationYear][weekROF-1];
+			littleRiverRaleighROFInflow = littleRiverRaleighInflow[histRealizations+yearROF-startSimulationYear][weekROF-1];
 					//Evap Calcs
-			ROFevap = evaporation[weekROF-1][histRealizations+yearROF-4];//Durham and OWASA evap
-			fallsROFevap = fallsLakeEvaporation[histRealizations+yearROF-3][weekROF-1];// Falls Lake evap
-			wbROFevap= lakeWheelerEvaporation[histRealizations+yearROF-4][weekROF-1];//Wheeler Benson evap
+			ROFevap = evaporation[histRealizations+yearROF-startSimulationYear][weekROF-1];//Durham and OWASA evap
+			fallsROFevap = fallsLakeEvaporation[histRealizations+yearROF-startSimulationYear][weekROF-1];// Falls Lake evap
+			wbROFevap= lakeWheelerEvaporation[histRealizations+yearROF-startSimulationYear][weekROF-1];//Wheeler Benson evap
 
 			riskOfFailureStorageROF.setInflow(durhamROFInflow, //passes inflows to storage calcs
 				31.4*owasaROFInflow,
@@ -1623,7 +1569,7 @@ void Simulation::createRiskOfFailure(int realization, int synthYear, double durh
 			}
 		}
 	}
-	for (int synthRealizations = 3; synthRealizations<synthYear; synthRealizations++)// determines the year of the historical streamflow record to be used in calculations
+	for (int synthRealizations = 1; synthRealizations<synthYear; synthRealizations++)// determines the year of the historical streamflow record to be used in calculations
 	{
 		counter = 0;
 		thisTimeO=0;
@@ -1641,7 +1587,7 @@ void Simulation::createRiskOfFailure(int realization, int synthYear, double durh
 			thisTimeRIP[x] = 0;
 			thisTimeCIP[x] = 0;
 		}
-		riskOfFailureDates.initializeDates(4,1,week,7,0);//each simulation is run independently (52 week intervals, then the slate is cleaned)
+		riskOfFailureDates.initializeDates(synthRealizations,1,week,7,0);//each simulation is run independently (52 week intervals, then the slate is cleaned)
 	
 		riskOfFailureStorageROF.updateReservoirStorageROF(durhamS, teerS, CCRS, ULS, STQS, owasaS, lakeWBS, flSS, flQS, jlSS, jlQS, caryJordanS,  raleighJordanS,  durhamJordanS, owasaJordanS, littleRiverRalS, raleighQS);
 		riskOfFailureStorageIP.updateReservoirStorageROF();
@@ -1666,7 +1612,7 @@ void Simulation::createRiskOfFailure(int realization, int synthYear, double durh
 			riskOfFailureStorageIP.setDemands(durhamROFDemand, owasaROFDemand, raleighROFDemand, caryROFDemand, numdaysROF);//passes demands to storage calcs
 					
 			//Inflow Calcs
-			syntheticIndex = (yearROF-1+synthRealizations)*52+weekROF-1;
+			syntheticIndex = (yearROF-1)*52+weekROF-1;
 			durhamROFInflow = durhamInflows.synthetic[realization][syntheticIndex];//Durham Inflows
 			raleighROFInflow = owasaInflows.synthetic[realization][syntheticIndex];//Raleigh
 			owasaROFInflow = fallsInflows.synthetic[realization][syntheticIndex];//OWASA
@@ -1677,9 +1623,10 @@ void Simulation::createRiskOfFailure(int realization, int synthYear, double durh
 			lillingtonROFInflow = lillingtonInflows.synthetic[realization][syntheticIndex];
 			littleRiverRaleighROFInflow = littleRiverRaleighInflows.synthetic[realization][syntheticIndex];
 			//Evap Calcs
-			ROFevap = evaporation[weekROF-1][synthRealizations];//Durham and OWASA evap
-			fallsROFevap = fallsLakeEvaporation[synthRealizations][weekROF-1];// Falls Lake evap
-			wbROFevap= lakeWheelerEvaporation[synthRealizations][weekROF-1];//Wheeler Benson evap
+
+			ROFevap = durhamOwasaEvap.synthetic[realization][syntheticIndex];//Durham and OWASA evap
+			fallsROFevap = fallsEvap.synthetic[realization][syntheticIndex];// Falls Lake evap
+			wbROFevap= wheelerEvap.synthetic[realization][syntheticIndex];//Wheeler Benson evap
 					
 			riskOfFailureStorageROF.setInflow(durhamROFInflow, //passes inflows to storage calcs
 				31.4*owasaROFInflow,
@@ -1709,11 +1656,11 @@ void Simulation::createRiskOfFailure(int realization, int synthYear, double durh
 				wbROFevap, 
 				ROFevap, littleRiverRaleighROFInflow);
 			
-			riskOfFailureStorageROF.setSpillover(week-1);//reservoir releases to meet downstream needs and/or reservoir capacity
-			riskOfFailureStorageIP.setSpillover(week-1);//reservoir releases to meet downstream needs and/or reservoir capacity
+			riskOfFailureStorageROF.setSpillover(weekROF-1);//reservoir releases to meet downstream needs and/or reservoir capacity
+			riskOfFailureStorageIP.setSpillover(weekROF-1);//reservoir releases to meet downstream needs and/or reservoir capacity
 			
-			riskOfFailureStorageROF.updateStorage(week-1);//storage calcs
-			riskOfFailureStorageIP.updateStorage(week-1);//storage calcs
+			riskOfFailureStorageROF.updateStorage(weekROF-1);//storage calcs
+			riskOfFailureStorageIP.updateStorage(weekROF-1);//storage calcs
 			
 			oROFs = riskOfFailureStorageROF.getOWASAStorage();//retrieve overall storage, OWASA
 			dROFs = riskOfFailureStorageROF.getDurhamStorage();//retrieve overall storage, Durham
@@ -2152,7 +2099,7 @@ void Simulation::createInfrastructureRisk(int realization, int synthYear, double
 		thisTimeD = 0;
 		thisTimeR = 0;
 		thisTimeC = 0;
-		riskOfFailureDates.initializeDates(4,1,1,7,0);//each simulation is run independently (52 week intervals, then the slate is cleaned)
+		riskOfFailureDates.initializeDates(startSimulationYear,1,1,7,0);//each simulation is run independently (52 week intervals, then the slate is cleaned)
 		riskOfFailureStorageIP.updateReservoirStorageROF(durhamS, teerS, CCRS, ULS, STQS, owasaS, lakeWBS, flSS, flQS, jlSS, jlQS, caryJordanS,  raleighJordanS,  durhamJordanS, owasaJordanS, littleRiverRalS, raleighQS);
 		riskOfFailureStorageInf.updateReservoirStorageROF();								
 					
@@ -2174,19 +2121,19 @@ void Simulation::createInfrastructureRisk(int realization, int synthYear, double
 			riskOfFailureStorageInf.setDemands(durhamROFDemand, owasaROFDemand, raleighROFDemand, caryROFDemand, numdaysROF);//passes demands to storage calcs
 			
 			//Inflow Calcs
-			durhamROFInflow = michieInflow[weekROF-1][histRealizations+yearROF]+littleRiverInflow[weekROF-1][histRealizations+yearROF-3];//Durham Inflows
-			raleighROFInflow = fallsLakeInflow[histRealizations+yearROF-3][weekROF-1];//Raleigh
-			owasaROFInflow = owasaInflow[weekROF-1][histRealizations+yearROF];//OWASA
-			wbROFInflow = lakeWBInflow[histRealizations+yearROF-2][weekROF-1];//Wheeler&Benson
-			claytonROFInflow = claytonInflow[histRealizations+yearROF-2][weekROF-1];//Clayton gauge
-			crabtreeROFInflow = crabtreeInflow[histRealizations+yearROF-2][weekROF-1];// Crabtree creek
-			jordanROFInflow = jordanLakeInflow[histRealizations+yearROF-4][weekROF-1];
-			lillingtonROFInflow = lillingtonGaugeInflow[histRealizations+yearROF-4][weekROF-1];
-			littleRiverRaleighROFInflow = littleRiverRaleighInflow[histRealizations+yearROF-3][weekROF-1];
+			durhamROFInflow = michieInflow[histRealizations+yearROF-startSimulationYear][weekROF-1]+littleRiverInflow[histRealizations+yearROF-startSimulationYear][weekROF-1];//Durham Inflows
+			raleighROFInflow = fallsLakeInflow[histRealizations+yearROF-startSimulationYear][weekROF-1];//Raleigh
+			owasaROFInflow = owasaInflow[histRealizations+yearROF-startSimulationYear][weekROF-1];//OWASA
+			wbROFInflow = lakeWBInflow[histRealizations+yearROF-startSimulationYear][weekROF-1];//Wheeler&Benson
+			claytonROFInflow = claytonInflow[histRealizations+yearROF-startSimulationYear][weekROF-1];//Clayton gauge
+			crabtreeROFInflow = crabtreeInflow[histRealizations+yearROF-startSimulationYear][weekROF-1];// Crabtree creek
+			jordanROFInflow = jordanLakeInflow[histRealizations+yearROF-startSimulationYear][weekROF-1];
+			lillingtonROFInflow = lillingtonGaugeInflow[histRealizations+yearROF-startSimulationYear][weekROF-1];
+			littleRiverRaleighROFInflow = littleRiverRaleighInflow[histRealizations+yearROF-startSimulationYear][weekROF-1];
 			//Evap Calcs
-			ROFevap = evaporation[week-1][histRealizations+yearROF-4];//Durham and OWASA evap
-			fallsROFevap = fallsLakeEvaporation[histRealizations+yearROF-3][weekROF-1];// Falls Lake evap
-			wbROFevap= lakeWheelerEvaporation[histRealizations+yearROF-4][weekROF-1];//Wheeler Benson evap
+			ROFevap = evaporation[histRealizations+yearROF-startSimulationYear][weekROF-1];//Durham and OWASA evap
+			fallsROFevap = fallsLakeEvaporation[histRealizations+yearROF-startSimulationYear][weekROF-1];// Falls Lake evap
+			wbROFevap= lakeWheelerEvaporation[histRealizations+yearROF-startSimulationYear][weekROF-1];//Wheeler Benson evap
 
 			riskOfFailureStorageInf.setInflow(durhamROFInflow, //passes inflows to storage calcs
 				31.4*owasaROFInflow,
@@ -2289,18 +2236,18 @@ void Simulation::createInfrastructureRisk(int realization, int synthYear, double
 			cary.infRisk += 1.0;
 		}
 	}
-	for (int synthRealizations = 3; synthRealizations<synthYear; synthRealizations++)// determines the year of the historical streamflow record to be used in calculations
+	for (int synthRealizations = 1; synthRealizations<synthYear; synthRealizations++)// determines the year of the historical streamflow record to be used in calculations
 	{
 		counter = 0;
 		thisTimeO=0;
 		thisTimeD = 0;
 		thisTimeR = 0;
 		thisTimeC = 0;
-		riskOfFailureDates.initializeDates(1,1,1,7,0);//each simulation is run independently (52 week intervals, then the slate is cleaned)
+		riskOfFailureDates.initializeDates(synthRealizations,1,1,7,0);//each simulation is run independently (52 week intervals, then the slate is cleaned)
 		riskOfFailureStorageInf.updateReservoirStorageROF();
 		riskOfFailureStorageIP.updateReservoirStorageROF(durhamS, teerS, CCRS, ULS, STQS, owasaS, lakeWBS, flSS, flQS, jlSS, jlQS, caryJordanS,  raleighJordanS,  durhamJordanS, owasaJordanS, littleRiverRalS, raleighQS);
 					
-		while (counter<52)
+		while (counter<78)
 		{	
 			//Retrieving date information
 			yearROF = riskOfFailureDates.getYear();
@@ -2318,7 +2265,8 @@ void Simulation::createInfrastructureRisk(int realization, int synthYear, double
 			riskOfFailureStorageInf.setDemands(durhamROFDemand, owasaROFDemand, raleighROFDemand, caryROFDemand, numdaysROF);//passes demands to storage calcs
 					
 			//Inflow Calcs
-			syntheticIndex = (yearROF-1+synthRealizations)*52+weekROF-1;
+			syntheticIndex = (yearROF-1)*52+weekROF-1;
+			
 			durhamROFInflow = durhamInflows.synthetic[realization][syntheticIndex];//Durham Inflows
 			raleighROFInflow = owasaInflows.synthetic[realization][syntheticIndex];//Raleigh
 			owasaROFInflow = fallsInflows.synthetic[realization][syntheticIndex];//OWASA
@@ -2329,9 +2277,9 @@ void Simulation::createInfrastructureRisk(int realization, int synthYear, double
 			lillingtonROFInflow = lillingtonInflows.synthetic[realization][syntheticIndex];
 			littleRiverRaleighROFInflow = littleRiverRaleighInflows.synthetic[realization][syntheticIndex];
 			//Evap Calcs
-			ROFevap = evaporation[weekROF-1][synthRealizations];//Durham and OWASA evap
-			fallsROFevap = fallsLakeEvaporation[synthRealizations][weekROF-1];// Falls Lake evap
-			wbROFevap= lakeWheelerEvaporation[synthRealizations][weekROF-1];//Wheeler Benson evap
+			ROFevap = durhamOwasaEvap.synthetic[realization][syntheticIndex];//Durham and OWASA evap
+			fallsROFevap = fallsEvap.synthetic[realization][syntheticIndex];// Falls Lake evap
+			wbROFevap= wheelerEvap.synthetic[realization][syntheticIndex];//Wheeler Benson evap
 
 			riskOfFailureStorageInf.setInflow(durhamROFInflow, //passes inflows to storage calcs
 				31.4*owasaROFInflow,
@@ -2700,7 +2648,7 @@ void Simulation::realizationLoop()
 	{
 		
 		// Initialize demand and reservoir storage objects (year, month, week, daysPerWeek, leapYearCounter)
-		simDates.initializeDates(4,1,1,7,0);
+		simDates.initializeDates(startSimulationYear,1,1,7,0);
 		
 		systemStorage.initializeReservoirStorage(durham_res_supply_capacity, 
 													cane_creek_supply_capacity, stone_quarry_supply_capacity,university_lake_supply_capacity, lake_wheeler_benson_supply_capacity, falls_lake_supply_capacity, falls_lake_wq_capacity,
@@ -2746,7 +2694,7 @@ void Simulation::realizationLoop()
 			cary.fillRestrictionsArray(season);
 			raleigh.fillRestrictionsArray(season);
 			
-			createRiskOfFailure(realization, year-2, durham.averageUse, owasa.averageUse, raleigh.averageUse, cary.averageUse);
+			createRiskOfFailure(realization, year, durham.averageUse, owasa.averageUse, raleigh.averageUse, cary.averageUse);
 				
 			/////////////////////////////////////////////////////////////////////////////////////////////////////////
 			
@@ -2849,13 +2797,12 @@ void Simulation::realizationLoop()
 			if (week == 1)
 			{
 				createInfrastructure();
-				createInfrastructureRisk(realization, year-2, durham.averageUse, owasa.averageUse, raleigh.averageUse, cary.averageUse);
+				createInfrastructureRisk(realization, year-1, durham.averageUse, owasa.averageUse, raleigh.averageUse, cary.averageUse);
 				triggerInfrastructure(realization);
 				durham.annualUpdate(year-1, realization);
 				owasa.annualUpdate(year-1, realization);
 				cary.annualUpdate(year-1, realization);
 				raleigh.annualUpdate(year-1, realization);
-				cout<<durham.probReach<<"  "<<raleigh.probReach<<"  "<<owasa.probReach<<"  "<<cary.probReach<<endl;
 
 				//Upgrade Cary WTP to 56 MGD in 2016
 				if (caryUpgrades[caryWTPcounter]<cary.averageUse)
@@ -2876,7 +2823,7 @@ void Simulation::realizationLoop()
 			
 		} // End weekly loop
 		// Saving the average annual cost from each 15-year realization
-		
+	cout<<realization<<endl;	
 	} //end realization loop
 	durham.calculateObjectives();
 	owasa.calculateObjectives();

@@ -100,9 +100,13 @@ int main (int argc, char *argv[])
 	
 	int startYear = 2010;
 	int endYear = 2060;
+	int currentYear = 2015;
 	
-	int terminateYear = endYear-startYear+1;
+	
+	int terminateYear = endYear-startYear + 1;
+	int startSimulationYear = currentYear - startYear + 1;
 	simulation.setNumYears(terminateYear);
+	simulation.setStartYear(startSimulationYear);
 
 	//seed random number generator
 	// NOTE: for model, the seed stays the same. For Borg, the seed comes from command line argument.
